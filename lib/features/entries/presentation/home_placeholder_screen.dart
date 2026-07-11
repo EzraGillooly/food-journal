@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme_provider.dart';
 import '../../auth/application/auth_providers.dart';
@@ -94,7 +95,10 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
                   onChanged: (v) => setState(() => _homemade = v),
                 ),
                 const SizedBox(height: 24),
-                FilledButton(onPressed: () {}, child: const Text('Add entry')),
+                FilledButton(
+                  onPressed: () => context.go('/new'),
+                  child: const Text('Add entry'),
+                ),
               ],
             ),
           ),

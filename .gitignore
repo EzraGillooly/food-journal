@@ -46,3 +46,6 @@ app.*.map.json
 
 # IDE
 .idea/
+
+# Local dev-server config (may contain keys)
+.claude/launch.json

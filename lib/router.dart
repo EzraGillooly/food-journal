@@ -8,6 +8,7 @@ import 'core/supabase/supabase_providers.dart';
 import 'features/auth/presentation/forgot_password_screen.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/signup_screen.dart';
+import 'features/entries/presentation/entry_form_screen.dart';
 import 'features/entries/presentation/home_placeholder_screen.dart';
 
 /// Turns a Stream into a Listenable so GoRouter re-evaluates redirects whenever
@@ -53,6 +54,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         builder: (context, state) => const HomePlaceholderScreen(),
+      ),
+      GoRoute(
+        path: '/new',
+        builder: (context, state) => const EntryFormScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
