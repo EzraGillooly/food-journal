@@ -50,22 +50,22 @@ Last updated: 2026-07-11.
 
 ## Phase 2 — F1 Authentication (vertical)
 
-- [ ] **T2.1 — Auth state + router guard**
+- [x] **T2.1 — Auth state + router guard**
   Riverpod `authProvider` exposing session/user from Supabase `onAuthStateChange`; `go_router` redirect: logged-out → `/login`, logged-in → `/`.
   **AC:** Logged-out users cannot reach any journal route; session persists across reload.
   **Verify:** manual + widget test of redirect logic.
 
-- [ ] **T2.2 — Login screen**
+- [x] **T2.2 — Login screen**
   Email/password login UI wired to Supabase; loading + error states; link to signup/reset.
   **AC:** Valid creds log in and land on feed placeholder; bad creds show a clear inline error.
   **Verify:** log in with a test account on the deployed site.
 
-- [ ] **T2.3 — Sign up screen**
+- [x] **T2.3 — Sign up screen**
   Email/password signup with email confirmation; post-signup "check your email" state.
   **AC:** New signup creates a user; confirmation email flow completes to a usable session.
   **Verify:** create a fresh account end-to-end.
 
-- [ ] **T2.4 — Password reset + logout**
+- [x] **T2.4 — Password reset + logout**
   Reset-via-email flow; logout action clears session.
   **AC:** Reset email arrives and sets a new password; logout returns to `/login`.
   **Verify:** run both flows on the deployed site.
