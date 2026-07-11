@@ -36,12 +36,12 @@ Last updated: 2026-07-11.
 
 ## Phase 1 — Design foundation
 
-- [ ] **T1.1 — Theme tokens + presets + fonts**
+- [x] **T1.1 — Theme tokens + presets + fonts**
   Bundle Libre Bodoni + Karla in `assets/fonts/`. Build `AppTheme` with token-based `ThemeData`; implement Soft Blush (primary) + Cottage Cream / Warm Bakery / Garden Fresh presets (SPEC §3).
   **AC:** All colors/fonts come from theme tokens; switching preset restyles a sample screen.
   **Verify:** widget test renders sample screen; visually check each preset.
 
-- [ ] **T1.2 — Shared widgets**
+- [x] **T1.2 — Shared widgets**
   Reusable `RatingControl` (1–10), `CategoryTag`, `MadeBoughtToggle`, primary/secondary buttons — all theme-driven, 44px touch targets, focus states.
   **AC:** Each widget has a widget test and works at mobile width.
   **Verify:** `flutter test` for the shared widgets.
