@@ -10,22 +10,22 @@ Last updated: 2026-07-11.
 
 ## Phase 0 — Scaffold, schema & deploy pipeline
 
-- [ ] **T0.1 — Flutter project + structure**
+- [x] **T0.1 — Flutter project + structure**
   Create Flutter app in the repo root; add deps (`flutter_riverpod`, `riverpod_annotation`, `go_router`, `supabase_flutter`, `image_picker`, `flutter_image_compress`); dev deps (`build_runner`, `riverpod_generator`, `flutter_lints`, `riverpod_lint`, `custom_lint`, `integration_test`). Create the `lib/` feature-first skeleton from SPEC §5. Configure `analysis_options.yaml`.
   **AC:** `flutter pub get` and `flutter analyze` both succeed on an empty skeleton.
   **Verify:** run both commands clean.
 
-- [ ] **T0.2 — Supabase schema + RLS migration** 👤 (apply step)
+- [x] **T0.2 — Supabase schema + RLS migration** 👤 (apply step — SQL written; awaiting apply in dashboard)
   Write `supabase/migrations/0001_init.sql`: `food_entries` table (SPEC §5), `enable row level security`, four policies (select/insert/update/delete all `using (auth.uid() = user_id)`), private Storage bucket `entry-photos`, and Storage policies scoping objects to `{user_id}/…`.
   **AC:** SQL applies cleanly; RLS is ON; policies exist for all four verbs.
   **Verify:** apply via Supabase SQL editor; confirm in dashboard that RLS is enabled and policies listed.
 
-- [ ] **T0.3 — App bootstrap**
+- [x] **T0.3 — App bootstrap**
   `main.dart`: `Supabase.initialize` reading `SUPABASE_URL`/`SUPABASE_ANON_KEY` from `--dart-define`; wrap in `ProviderScope`. `app.dart`: `MaterialApp.router` with theme. `router.dart`: `go_router` with **hash** URL strategy + a placeholder home screen.
   **AC:** App boots locally with `flutter run -d chrome` showing a themed placeholder; no hardcoded keys.
   **Verify:** run locally with dart-defines; app renders.
 
-- [ ] **T0.4 — GitHub Pages CI** 👤 (repo + Pages settings)
+- [x] **T0.4 — GitHub Pages CI** 👤 (workflow written; awaiting Pages enable + repo variables)
   New repo `food-journal`. `web/index.html` with correct `base-href`. `.github/workflows/deploy.yml`: build `flutter build web --release --web-renderer canvaskit --base-href /food-journal/` with dart-defines from repo variables, deploy to Pages on push to `main`.
   **AC:** Push to `main` deploys; the placeholder app loads at the Pages URL and survives a hard refresh (no 404).
   **Verify:** visit deployed URL, refresh on a sub-route.
