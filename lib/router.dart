@@ -8,8 +8,9 @@ import 'core/supabase/supabase_providers.dart';
 import 'features/auth/presentation/forgot_password_screen.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/signup_screen.dart';
+import 'features/entries/presentation/entry_detail_screen.dart';
 import 'features/entries/presentation/entry_form_screen.dart';
-import 'features/entries/presentation/home_placeholder_screen.dart';
+import 'features/entries/presentation/feed_screen.dart';
 
 /// Turns a Stream into a Listenable so GoRouter re-evaluates redirects whenever
 /// auth state changes.
@@ -51,13 +52,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const HomePlaceholderScreen(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const FeedScreen()),
       GoRoute(
         path: '/new',
         builder: (context, state) => const EntryFormScreen(),
+      ),
+      GoRoute(
+        path: '/entry/:id',
+        builder: (context, state) =>
+            EntryDetailScreen(entryId: state.pathParameters['id']!),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
