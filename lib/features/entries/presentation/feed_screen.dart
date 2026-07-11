@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../auth/application/auth_providers.dart';
 import '../application/entries_controller.dart';
+import '../application/feed_filter.dart';
 import '../data/food_entry.dart';
 import 'widgets/entry_card.dart';
+import 'widgets/feed_filter_bar.dart';
 
 /// The journal feed (F3): the current user's entries, newest first, grouped by
 /// day. RLS guarantees only their own entries are returned.
@@ -43,10 +45,32 @@ class FeedScreen extends ConsumerWidget {
         ),
         data: (entries) {
           if (entries.isEmpty) return const _EmptyState();
-          return RefreshIndicator(
-            onRefresh: () =>
-                ref.read(entriesControllerProvider.notifier).refresh(),
-            child: _DayGroupedList(entries: entries),
+          final filter = ref.watch(feedFilterProvider);
+          final filtered = entries
+              .where(filter.matches)
+              .toList(growable: false);
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: FeedFilterBar(),
+                  ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () => ref
+                          .read(entriesControllerProvider.notifier)
+                          .refresh(),
+                      child: filtered.isEmpty
+                          ? const _NoMatchesState()
+                          : _DayGroupedList(entries: filtered),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         },
       ),
@@ -65,32 +89,59 @@ class _DayGroupedList extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
     final groups = _groupByDay(entries);
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: ListView.builder(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-          itemCount: groups.length,
-          itemBuilder: (context, i) {
-            final group = groups[i];
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: i == 0 ? 8 : 20, bottom: 12),
-                  child: Text(
-                    group.label,
-                    style: text.titleLarge?.copyWith(color: theme.inkMuted),
-                  ),
-                ),
-                for (final entry in group.entries)
-                  EntryCard(
-                    entry: entry,
-                    onTap: () => context.go('/entry/${entry.id}'),
-                  ),
-              ],
-            );
-          },
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+      physics: const AlwaysScrollableScrollPhysics(),
+      itemCount: groups.length,
+      itemBuilder: (context, i) {
+        final group = groups[i];
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(top: i == 0 ? 8 : 20, bottom: 12),
+              child: Text(
+                group.label,
+                style: text.titleLarge?.copyWith(color: theme.inkMuted),
+              ),
+            ),
+            for (final entry in group.entries)
+              EntryCard(
+                entry: entry,
+                onTap: () => context.go('/entry/${entry.id}'),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _NoMatchesState extends ConsumerWidget {
+  const _NoMatchesState();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(themeControllerProvider);
+    final text = Theme.of(context).textTheme;
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.search_off, size: 40, color: theme.inkMuted),
+              const SizedBox(height: 12),
+              Text('No entries match', style: text.titleMedium),
+              const SizedBox(height: 6),
+              TextButton(
+                onPressed: () => ref.read(feedFilterProvider.notifier).clear(),
+                child: const Text('Clear filters'),
+              ),
+            ],
+          ),
         ),
       ),
     );

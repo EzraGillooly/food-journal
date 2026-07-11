@@ -138,7 +138,7 @@ Last updated: 2026-07-11.
 
 ## Phase 7 — F6 Filter & browse
 
-- [ ] **T7.1 — Filters + search**
+- [x] **T7.1 — Filters + search**
   Filter feed by category and made/bought (combinable); search by name.
   **AC:** Filters combine and update the list without full reload; empty states handled.
   **Verify:** apply combined filters + search on a seeded account.
