@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../auth/application/auth_providers.dart';
 import '../data/entries_repository.dart';
 import '../data/food_entry.dart';
 
@@ -10,6 +11,10 @@ import '../data/food_entry.dart';
 class EntriesController extends AsyncNotifier<List<FoodEntry>> {
   @override
   Future<List<FoodEntry>> build() {
+    // Rebind to the current user: when auth changes (login/logout/switch), this
+    // rebuilds and re-queries so one account never shows another's cached data.
+    final session = ref.watch(sessionProvider);
+    if (session == null) return Future.value(const []);
     return ref.watch(entriesRepositoryProvider).list();
   }
 

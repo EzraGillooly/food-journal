@@ -76,17 +76,17 @@ Last updated: 2026-07-11.
 
 ## Phase 3 — F2 Create entry (vertical)
 
-- [ ] **T3.1 — Model + repository**
+- [x] **T3.1 — Model + repository**
   `FoodEntry` model (SPEC §5 columns); `EntriesRepository` with `create` + `list` against Supabase; Riverpod providers.
   **AC:** Repository insert writes a row with `user_id = auth.uid()`; typed round-trip.
   **Verify:** unit test against a test Supabase project (or mocked client) + one real insert confirmed in dashboard.
 
-- [ ] **T3.2 — Photo pick, compress & upload**
+- [x] **T3.2 — Photo pick, compress & upload**
   `image_picker` (camera/gallery, web-compatible) → compress (longest edge ~1600px) → upload to `entry-photos/{user_id}/{entry_id}.jpg`; return `photo_path`.
   **AC:** Selecting a photo on web uploads a compressed object to the user's Storage folder; photo is optional (entry can save without one).
   **Verify:** pick a photo on deployed web; confirm object appears under the correct folder.
 
-- [ ] **T3.3 — Entry form**
+- [x] **T3.3 — Entry form**
   Form with all fields (SPEC §F2): name, rating 1–10, category, made/bought, notes, recipe/ingredients, location (typed), time (defaults now, editable), optional photo. Saves via repository.
   **AC:** A complete entry saves in one action and returns to the feed; required-field validation works.
   **Verify:** create several entries (with and without photo) on the deployed site.
@@ -97,12 +97,12 @@ Last updated: 2026-07-11.
 
 ## Phase 4 — F3 Feed / journal
 
-- [ ] **T4.1 — Feed list**
+- [x] **T4.1 — Feed list**
   Riverpod provider querying the current user's entries desc by `eaten_at`, grouped by day; entry card (photo, name, category tag, made/bought, rating, time); lazy-loaded images.
   **AC:** Feed shows only the logged-in user's entries, newest first, grouped by day; scrolls smoothly with 100+ items.
   **Verify:** seed 100+ entries; scroll test on mobile width.
 
-- [ ] **T4.2 — RLS isolation test (CP-2 gate)** 👤
+- [x] **T4.2 — RLS isolation test (CP-2 gate)** 👤
   With two accounts each holding entries, verify account B's feed shows none of account A's, and a direct fetch of A's entry id from B returns nothing.
   **AC:** Zero cross-account visibility via UI and via direct id query.
   **Verify:** integration test + manual two-account check on deployed site.
@@ -113,7 +113,7 @@ Last updated: 2026-07-11.
 
 ## Phase 5 — F4 Entry detail
 
-- [ ] **T5.1 — Entry detail screen**
+- [x] **T5.1 — Entry detail screen**
   Full-screen entry view (all fields + full-size photo), reachable from a card via a deep-linkable route `/entry/:id`.
   **AC:** Opening the route as the owner shows the entry; as a non-owner shows not-found (RLS).
   **Verify:** navigate from feed; test the URL directly while logged in as owner and as another user.
