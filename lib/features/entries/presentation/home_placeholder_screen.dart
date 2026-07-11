@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/theme_provider.dart';
+import '../../auth/application/auth_providers.dart';
 import '../../../shared/category_tag.dart';
 import '../../../shared/made_bought_toggle.dart';
 import '../../../shared/rating_control.dart';
@@ -27,7 +28,16 @@ class _HomePlaceholderScreenState extends ConsumerState<HomePlaceholderScreen> {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Food Journal')),
+      appBar: AppBar(
+        title: const Text('Food Journal'),
+        actions: [
+          IconButton(
+            tooltip: 'Log out',
+            icon: const Icon(Icons.logout),
+            onPressed: () => ref.read(authRepositoryProvider).signOut(),
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
