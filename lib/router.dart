@@ -62,6 +62,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) =>
             EntryDetailScreen(entryId: state.pathParameters['id']!),
       ),
+      GoRoute(
+        path: '/entry/:id/edit',
+        builder: (context, state) =>
+            EntryEditScreen(entryId: state.pathParameters['id']!),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',

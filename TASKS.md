@@ -122,12 +122,12 @@ Last updated: 2026-07-11.
 
 ## Phase 6 — F5 Edit & delete
 
-- [ ] **T6.1 — Edit entry**
+- [x] **T6.1 — Edit entry**
   Reuse the entry form pre-filled; update via repository; maintain `updated_at`.
   **AC:** Editing any field persists and reflects in feed/detail.
   **Verify:** edit an entry, confirm changes on reload.
 
-- [ ] **T6.2 — Delete entry**
+- [x] **T6.2 — Delete entry**
   Delete with confirm dialog; also remove the Storage photo object.
   **AC:** Deleting removes the row and its photo; feed updates immediately.
   **Verify:** delete an entry with a photo; confirm both row and Storage object are gone.

@@ -35,6 +35,20 @@ class EntryDetailScreen extends ConsumerWidget {
           onPressed: () => context.go('/'),
         ),
         title: Text(entry?.name ?? 'Entry'),
+        actions: entry == null
+            ? null
+            : [
+                IconButton(
+                  tooltip: 'Edit',
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => context.go('/entry/${entry.id}/edit'),
+                ),
+                IconButton(
+                  tooltip: 'Delete',
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _confirmDelete(context, ref, entry),
+                ),
+              ],
       ),
       body: entriesAsync.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -42,6 +56,33 @@ class EntryDetailScreen extends ConsumerWidget {
           ? _NotFound()
           : _Detail(entry: entry, theme: theme, text: text),
     );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    FoodEntry entry,
+  ) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete this entry?'),
+        content: Text('“${entry.name}” will be removed for good.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ref.read(entriesControllerProvider.notifier).remove(entry);
+    if (context.mounted) context.go('/');
   }
 }
 

@@ -79,6 +79,37 @@ class EntriesRepository {
         .single();
     return FoodEntry.fromMap(row);
   }
+
+  /// Updates an existing entry. If [newPhotoBytes] is given, uploads a
+  /// replacement photo (same path, upsert) and updates photo_path.
+  Future<FoodEntry> update(FoodEntry entry, {Uint8List? newPhotoBytes}) async {
+    final id = entry.id;
+    if (id == null) throw ArgumentError('Cannot update an unsaved entry.');
+
+    var photoPath = entry.photoPath;
+    if (newPhotoBytes != null) {
+      photoPath = await uploadPhoto(entryId: id, bytes: newPhotoBytes);
+    }
+
+    final row = await _client
+        .from('food_entries')
+        .update(entry.copyWith(photoPath: photoPath).toInsert())
+        .eq('id', id)
+        .select()
+        .single();
+    return FoodEntry.fromMap(row);
+  }
+
+  /// Deletes an entry and its photo. Removes the storage object first so a
+  /// failed row delete doesn't orphan the file silently.
+  Future<void> delete(FoodEntry entry) async {
+    final id = entry.id;
+    if (id == null) return;
+    if (entry.photoPath != null) {
+      await _client.storage.from(_photoBucket).remove([entry.photoPath!]);
+    }
+    await _client.from('food_entries').delete().eq('id', id);
+  }
 }
 
 final entriesRepositoryProvider = Provider<EntriesRepository>((ref) {

@@ -13,10 +13,47 @@ import '../application/entries_controller.dart';
 import '../data/food_category.dart';
 import '../data/food_entry.dart';
 import '../data/photo_picker.dart';
+import 'widgets/entry_photo.dart';
 
-/// Screen for creating a new journal entry (F2).
+/// Route wrapper for editing: looks up the entry by id from the loaded list and
+/// renders the form pre-filled. Shows not-found if it isn't the user's entry.
+class EntryEditScreen extends ConsumerWidget {
+  const EntryEditScreen({super.key, required this.entryId});
+
+  final String entryId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entriesAsync = ref.watch(entriesControllerProvider);
+    final entry = entriesAsync.value
+        ?.where((e) => e.id == entryId)
+        .cast<FoodEntry?>()
+        .firstOrNull;
+
+    if (entriesAsync.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (entry == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: FilledButton(
+            onPressed: () => context.go('/'),
+            child: const Text('Back to journal'),
+          ),
+        ),
+      );
+    }
+    return EntryFormScreen(existing: entry);
+  }
+}
+
+/// Screen for creating a new entry (F2) or editing an existing one (F5).
 class EntryFormScreen extends ConsumerStatefulWidget {
-  const EntryFormScreen({super.key});
+  const EntryFormScreen({super.key, this.existing});
+
+  /// When non-null, the form edits this entry instead of creating a new one.
+  final FoodEntry? existing;
 
   @override
   ConsumerState<EntryFormScreen> createState() => _EntryFormScreenState();
@@ -37,6 +74,24 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
 
   bool _saving = false;
   String? _error;
+
+  bool get _isEditing => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    if (e != null) {
+      _name.text = e.name;
+      _notes.text = e.notes ?? '';
+      _recipe.text = e.recipe ?? '';
+      _location.text = e.location ?? '';
+      _rating = e.rating;
+      _category = e.category;
+      _homemade = e.isHomemade;
+      _eatenAt = e.eatenAt.toLocal();
+    }
+  }
 
   @override
   void dispose() {
@@ -85,20 +140,39 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     }
     setState(() => _saving = true);
     try {
-      final draft = FoodEntry(
-        name: _name.text.trim(),
-        rating: _rating!,
-        category: _category,
-        isHomemade: _homemade,
-        notes: _notes.text,
-        recipe: _recipe.text,
-        location: _location.text,
-        eatenAt: _eatenAt,
-      );
-      await ref
-          .read(entriesControllerProvider.notifier)
-          .add(draft, photoBytes: _photoBytes);
-      if (mounted) context.go('/');
+      final existing = widget.existing;
+      final notifier = ref.read(entriesControllerProvider.notifier);
+      if (existing != null) {
+        final updated = FoodEntry(
+          id: existing.id,
+          userId: existing.userId,
+          name: _name.text.trim(),
+          rating: _rating!,
+          category: _category,
+          isHomemade: _homemade,
+          notes: _notes.text,
+          recipe: _recipe.text,
+          location: _location.text,
+          photoPath: existing.photoPath,
+          eatenAt: _eatenAt,
+          createdAt: existing.createdAt,
+        );
+        await notifier.edit(updated, newPhotoBytes: _photoBytes);
+        if (mounted) context.go('/entry/${existing.id}');
+      } else {
+        final draft = FoodEntry(
+          name: _name.text.trim(),
+          rating: _rating!,
+          category: _category,
+          isHomemade: _homemade,
+          notes: _notes.text,
+          recipe: _recipe.text,
+          location: _location.text,
+          eatenAt: _eatenAt,
+        );
+        await notifier.add(draft, photoBytes: _photoBytes);
+        if (mounted) context.go('/');
+      }
     } catch (_) {
       setState(() => _error = 'Could not save. Check your connection.');
     } finally {
@@ -115,9 +189,10 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => context.go('/'),
+          onPressed: () =>
+              context.go(_isEditing ? '/entry/${widget.existing!.id}' : '/'),
         ),
-        title: const Text('New entry'),
+        title: Text(_isEditing ? 'Edit entry' : 'New entry'),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -127,7 +202,11 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                _PhotoField(bytes: _photoBytes, onPick: _pickPhoto),
+                _PhotoField(
+                  bytes: _photoBytes,
+                  existingPhotoPath: widget.existing?.photoPath,
+                  onPick: _pickPhoto,
+                ),
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _name,
@@ -203,7 +282,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Save entry'),
+                      : Text(_isEditing ? 'Save changes' : 'Save entry'),
                 ),
                 const SizedBox(height: 32),
               ],
@@ -221,14 +300,20 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
 }
 
 class _PhotoField extends ConsumerWidget {
-  const _PhotoField({required this.bytes, required this.onPick});
+  const _PhotoField({
+    required this.bytes,
+    required this.onPick,
+    this.existingPhotoPath,
+  });
 
   final Uint8List? bytes;
+  final String? existingPhotoPath;
   final void Function(ImageSource) onPick;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeControllerProvider);
+    final hasImage = bytes != null || existingPhotoPath != null;
     return AspectRatio(
       aspectRatio: 4 / 3,
       child: Material(
@@ -237,7 +322,7 @@ class _PhotoField extends ConsumerWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () => _showSourceSheet(context),
-          child: bytes == null
+          child: !hasImage
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -260,7 +345,10 @@ class _PhotoField extends ConsumerWidget {
               : Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.memory(bytes!, fit: BoxFit.cover),
+                    if (bytes != null)
+                      Image.memory(bytes!, fit: BoxFit.cover)
+                    else
+                      EntryPhoto(photoPath: existingPhotoPath),
                     Positioned(
                       right: 8,
                       bottom: 8,

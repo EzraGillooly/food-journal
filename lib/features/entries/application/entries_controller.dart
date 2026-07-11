@@ -27,6 +27,26 @@ class EntriesController extends AsyncNotifier<List<FoodEntry>> {
     return saved;
   }
 
+  /// Updates an entry (optionally replacing its photo) and syncs the list.
+  Future<FoodEntry> edit(FoodEntry entry, {Uint8List? newPhotoBytes}) async {
+    final repo = ref.read(entriesRepositoryProvider);
+    final saved = await repo.update(entry, newPhotoBytes: newPhotoBytes);
+    final current = state.value ?? const <FoodEntry>[];
+    state = AsyncData([for (final e in current) e.id == saved.id ? saved : e]);
+    return saved;
+  }
+
+  /// Deletes an entry (and its photo) and removes it from the list.
+  Future<void> remove(FoodEntry entry) async {
+    final repo = ref.read(entriesRepositoryProvider);
+    await repo.delete(entry);
+    final current = state.value ?? const <FoodEntry>[];
+    state = AsyncData([
+      for (final e in current)
+        if (e.id != entry.id) e,
+    ]);
+  }
+
   Future<void> refresh() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(
