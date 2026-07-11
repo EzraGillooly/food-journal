@@ -23,16 +23,25 @@
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="food_journal">
+  <meta name="apple-mobile-web-app-title" content="Food Journal">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>food_journal</title>
+  <title>Food Journal</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    body { background-color: #F6EEEA; margin: 0; }
+    #splash {
+      position: fixed; inset: 0; display: flex; align-items: center;
+      justify-content: center; font-family: Georgia, serif; color: #6B3B42;
+      font-size: 20px; letter-spacing: 0.5px;
+    }
+  </style>
 </head>
 <body>
+  <div id="splash">Food Journal</div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
