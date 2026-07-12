@@ -95,32 +95,32 @@ class _ThemeCreatorState extends ConsumerState<_ThemeCreator> {
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: 860, maxHeight: size.height * 0.92),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 8, 12),
-            child: Row(
-              children: [
-                Text(
-                  'Custom theme',
-                  style: TextStyle(
-                    fontFamily: theme.headingFont,
-                    fontSize: 22,
-                    color: theme.ink,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 8, 12),
+              child: Row(
+                children: [
+                  Text(
+                    'Custom theme',
+                    style: TextStyle(
+                      fontFamily: theme.headingFont,
+                      fontSize: 22,
+                      color: theme.ink,
+                    ),
                   ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(Icons.close, color: theme.inkMuted),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+                  const Spacer(),
+                  IconButton(
+                    icon: Icon(Icons.close, color: theme.inkMuted),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Flexible(
-            child: SingleChildScrollView(
+            Padding(
               padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
               child: wide
                   ? Row(
@@ -142,41 +142,43 @@ class _ThemeCreatorState extends ConsumerState<_ThemeCreator> {
                       ],
                     ),
             ),
-          ),
-          // Footer
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: theme.inkMuted.withValues(alpha: 0.15)),
+            // Footer
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: theme.inkMuted.withValues(alpha: 0.15),
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  TextButton(
+                    onPressed: () => setState(
+                      () => _colors = Map.of(AppTheme.customSeed.colors),
+                    ),
+                    child: const Text('Reset'),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text('Save & apply'),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                TextButton(
-                  onPressed: () => setState(
-                    () => _colors = Map.of(AppTheme.customSeed.colors),
-                  ),
-                  child: const Text('Reset'),
-                ),
-                const Spacer(),
-                FilledButton(
-                  onPressed: _saving ? null : _save,
-                  child: _saving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Save & apply'),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -335,80 +337,88 @@ class _ThemePreview extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             clipBehavior: Clip.antiAlias,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  width: 74,
-                  height: 96,
-                  color: theme.tagBg,
-                  child: Icon(Icons.restaurant, color: theme.tagInk, size: 22),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Blueberry pancakes',
-                          style: TextStyle(
-                            fontFamily: theme.headingFont,
-                            fontSize: 16,
-                            color: theme.ink,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            for (var i = 0; i < 5; i++)
-                              Icon(
-                                Icons.star_rounded,
-                                size: 15,
-                                color: i < 4
-                                    ? theme.primary
-                                    : theme.primary.withValues(alpha: 0.35),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.tagBg,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                'Breakfast',
-                                style: TextStyle(
-                                  fontFamily: theme.bodyFont,
-                                  fontSize: 10.5,
-                                  color: theme.tagInk,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Made it',
-                              style: TextStyle(
-                                fontFamily: theme.bodyFont,
-                                fontSize: 11,
-                                color: theme.inkMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+            child: SizedBox(
+              height: 116,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    width: 74,
+                    color: theme.tagBg,
+                    child: Icon(
+                      Icons.restaurant,
+                      color: theme.tagInk,
+                      size: 22,
                     ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Blueberry pancakes',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: theme.headingFont,
+                              fontSize: 16,
+                              color: theme.ink,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              for (var i = 0; i < 5; i++)
+                                Icon(
+                                  Icons.star_rounded,
+                                  size: 15,
+                                  color: i < 4
+                                      ? theme.primary
+                                      : theme.primary.withValues(alpha: 0.35),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.tagBg,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Breakfast',
+                                  style: TextStyle(
+                                    fontFamily: theme.bodyFont,
+                                    fontSize: 10.5,
+                                    color: theme.tagInk,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Made it',
+                                style: TextStyle(
+                                  fontFamily: theme.bodyFont,
+                                  fontSize: 11,
+                                  color: theme.inkMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),

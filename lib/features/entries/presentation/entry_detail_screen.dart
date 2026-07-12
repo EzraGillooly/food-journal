@@ -174,6 +174,17 @@ class _DetailState extends State<_Detail> {
             RatingStars(rating: dish.rating, size: 18),
             const SizedBox(width: 10),
             CategoryTag(category: entry.category),
+            if (dish.calories != null) ...[
+              const SizedBox(width: 10),
+              Text(
+                '${dish.calories} kcal',
+                style: TextStyle(
+                  fontFamily: theme.bodyFont,
+                  fontSize: 12.5,
+                  color: theme.inkMuted,
+                ),
+              ),
+            ],
             const Spacer(),
             const SizedBox(width: 8),
             MadeBoughtLabel(isHomemade: entry.isHomemade),

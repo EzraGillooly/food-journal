@@ -38,19 +38,23 @@ class _DishDraft {
   _DishDraft({
     String name = '',
     this.rating,
+    int? calories,
     String notes = '',
     String recipe = '',
   }) : name = TextEditingController(text: name),
+       calories = TextEditingController(text: calories?.toString() ?? ''),
        notes = TextEditingController(text: notes),
        recipe = TextEditingController(text: recipe);
 
   final TextEditingController name;
   int? rating;
+  final TextEditingController calories;
   final TextEditingController notes;
   final TextEditingController recipe;
 
   void dispose() {
     name.dispose();
+    calories.dispose();
     notes.dispose();
     recipe.dispose();
   }
@@ -93,6 +97,7 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
           _DishDraft(
             name: d.name,
             rating: d.rating,
+            calories: d.calories,
             notes: d.notes ?? '',
             recipe: d.recipe ?? '',
           ),
@@ -180,6 +185,7 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
         Dish(
           name: d.name.text.trim(),
           rating: d.rating!,
+          calories: int.tryParse(d.calories.text.trim()),
           notes: d.notes.text,
           recipe: d.recipe.text,
         ),
@@ -413,13 +419,39 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
           ),
         ),
         const SizedBox(height: 16),
-        _label(theme, 'Rating'),
-        const SizedBox(height: 4),
-        RatingControl(
-          value: active.rating,
-          onChanged: (v) => setState(() => active.rating = v),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _label(theme, 'Rating'),
+                  const SizedBox(height: 4),
+                  RatingControl(
+                    value: active.rating,
+                    onChanged: (v) => setState(() => active.rating = v),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 110,
+              child: TextField(
+                controller: active.calories,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Calories',
+                  suffixText: 'kcal',
+                  isDense: true,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 14),
+        _BulletBar(theme: theme, controller: active.notes),
         TextField(
           controller: active.notes,
           textCapitalization: TextCapitalization.sentences,
@@ -428,6 +460,7 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
           decoration: const InputDecoration(labelText: 'Notes', isDense: true),
         ),
         const SizedBox(height: 12),
+        _BulletBar(theme: theme, controller: active.recipe),
         TextField(
           controller: active.recipe,
           textCapitalization: TextCapitalization.sentences,
@@ -751,6 +784,77 @@ class _DateTimeField extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// A small toolbar of bullet styles. Tapping one inserts that bullet at the
+/// start of the current line in [controller], so users can make lists in the
+/// notes / ingredients fields if they want.
+class _BulletBar extends StatelessWidget {
+  const _BulletBar({required this.theme, required this.controller});
+
+  final AppTheme theme;
+  final TextEditingController controller;
+
+  static const _bullets = ['•', '◦', '–', '▸', '★', '✓'];
+
+  void _insert(String bullet) {
+    final text = controller.text;
+    final sel = controller.selection;
+    final pos = sel.isValid ? sel.start : text.length;
+    final before = text.substring(0, pos);
+    final atLineStart = before.isEmpty || before.endsWith('\n');
+    final insert = atLineStart ? '$bullet ' : '\n$bullet ';
+    controller.value = TextEditingValue(
+      text: before + insert + text.substring(pos),
+      selection: TextSelection.collapsed(offset: pos + insert.length),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text(
+            'Bullets',
+            style: TextStyle(
+              fontFamily: theme.bodyFont,
+              fontSize: 10.5,
+              letterSpacing: 0.8,
+              fontWeight: FontWeight.w700,
+              color: theme.inkMuted,
+            ),
+          ),
+          const SizedBox(width: 8),
+          for (final b in _bullets)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: InkWell(
+                onTap: () => _insert(b),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: 28,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: theme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.inkMuted.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Text(
+                    b,
+                    style: TextStyle(fontSize: 14, color: theme.ink),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
