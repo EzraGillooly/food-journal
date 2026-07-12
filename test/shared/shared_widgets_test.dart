@@ -5,12 +5,18 @@ import 'package:food_journal/features/entries/data/food_category.dart';
 import 'package:food_journal/shared/category_tag.dart';
 import 'package:food_journal/shared/made_bought_toggle.dart';
 import 'package:food_journal/shared/rating_control.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Widget _host(Widget child) => ProviderScope(
   child: MaterialApp(home: Scaffold(body: child)),
 );
 
 void main() {
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+  });
+
   testWidgets('RatingControl reports the tapped value', (tester) async {
     int? picked;
     await tester.pumpWidget(

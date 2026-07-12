@@ -147,7 +147,7 @@ Last updated: 2026-07-11.
 
 ## Phase 8 — F7 Theme switch (low priority)
 
-- [ ] **T8.1 — Theme setting**
+- [x] **T8.1 — Theme setting**
   Settings control to switch between saved themes; persist choice (local + optional profile).
   **AC:** Switching restyles the whole app live and persists across reloads.
   **Verify:** switch theme, reload, confirm persistence.

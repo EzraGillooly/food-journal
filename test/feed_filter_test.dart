@@ -7,14 +7,13 @@ FoodEntry _e({
   String name = 'Ramen',
   FoodCategory category = FoodCategory.dinner,
   bool homemade = true,
-}) =>
-    FoodEntry(
-      name: name,
-      rating: 8,
-      category: category,
-      isHomemade: homemade,
-      eatenAt: DateTime.utc(2026, 7, 11),
-    );
+}) => FoodEntry(
+  name: name,
+  rating: 8,
+  category: category,
+  isHomemade: homemade,
+  eatenAt: DateTime.utc(2026, 7, 11),
+);
 
 void main() {
   test('empty filter matches everything', () {
@@ -52,12 +51,15 @@ void main() {
       query: 'ramen',
     );
     expect(
-      f.matches(_e(name: 'Ramen', category: FoodCategory.dinner, homemade: true)),
+      f.matches(
+        _e(name: 'Ramen', category: FoodCategory.dinner, homemade: true),
+      ),
       isTrue,
     );
     expect(
       f.matches(
-          _e(name: 'Ramen', category: FoodCategory.dinner, homemade: false)),
+        _e(name: 'Ramen', category: FoodCategory.dinner, homemade: false),
+      ),
       isFalse,
     );
   });

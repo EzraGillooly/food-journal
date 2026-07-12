@@ -25,6 +25,11 @@ class FeedScreen extends ConsumerWidget {
         title: const Text('Food Journal'),
         actions: [
           IconButton(
+            tooltip: 'Settings',
+            icon: const Icon(Icons.palette_outlined),
+            onPressed: () => context.go('/settings'),
+          ),
+          IconButton(
             tooltip: 'Log out',
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(authRepositoryProvider).signOut(),

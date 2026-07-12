@@ -11,6 +11,7 @@ import 'features/auth/presentation/signup_screen.dart';
 import 'features/entries/presentation/entry_detail_screen.dart';
 import 'features/entries/presentation/entry_form_screen.dart';
 import 'features/entries/presentation/feed_screen.dart';
+import 'features/settings/settings_screen.dart';
 
 /// Turns a Stream into a Listenable so GoRouter re-evaluates redirects whenever
 /// auth state changes.
@@ -66,6 +67,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/entry/:id/edit',
         builder: (context, state) =>
             EntryEditScreen(entryId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(

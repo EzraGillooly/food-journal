@@ -4,8 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:food_journal/core/theme/app_theme.dart';
 import 'package:food_journal/core/theme/theme_provider.dart';
 import 'package:food_journal/features/auth/presentation/login_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+  });
+
   test('default theme preset is Soft Blush', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
