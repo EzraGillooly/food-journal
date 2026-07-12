@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/utils/date_format.dart';
 import '../../../shared/category_tag.dart';
+import '../../../shared/made_bought_label.dart';
+import '../../../shared/rating_badge.dart';
 import '../application/entries_controller.dart';
 import '../data/food_entry.dart';
 import 'widgets/entry_photo.dart';
@@ -52,6 +55,11 @@ class EntryDetailScreen extends ConsumerWidget {
       ),
       body: entriesAsync.isLoading
           ? const Center(child: CircularProgressIndicator())
+          : entriesAsync.hasError
+          ? _LoadError(
+              onRetry: () =>
+                  ref.read(entriesControllerProvider.notifier).refresh(),
+            )
           : entry == null
           ? _NotFound()
           : _Detail(entry: entry, theme: theme, text: text),
@@ -115,24 +123,7 @@ class _Detail extends StatelessWidget {
                         child: Text(entry.name, style: text.displaySmall),
                       ),
                       const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.primary,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          '${entry.rating}/10',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: theme.bodyFont,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                      RatingBadge(rating: entry.rating),
                     ],
                   ),
                   const SizedBox(height: 14),
@@ -140,22 +131,15 @@ class _Detail extends StatelessWidget {
                     children: [
                       CategoryTag(category: entry.category),
                       const SizedBox(width: 8),
-                      Icon(
-                        entry.isHomemade
-                            ? Icons.soup_kitchen
-                            : Icons.storefront,
-                        size: 16,
-                        color: theme.inkMuted,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        entry.isHomemade ? 'Made it' : 'Bought it',
-                        style: text.bodyMedium,
-                      ),
+                      MadeBoughtLabel(isHomemade: entry.isHomemade),
                     ],
                   ),
                   const SizedBox(height: 20),
-                  _row(context, Icons.schedule, _formatDateTime(entry.eatenAt)),
+                  _row(
+                    context,
+                    Icons.schedule,
+                    formatEntryDateTime(entry.eatenAt),
+                  ),
                   if (entry.location != null && entry.location!.isNotEmpty)
                     _row(context, Icons.place_outlined, entry.location!),
                   if (entry.notes != null && entry.notes!.isNotEmpty)
@@ -198,15 +182,6 @@ class _Detail extends StatelessWidget {
       ),
     );
   }
-
-  String _formatDateTime(DateTime d) {
-    final local = d.toLocal();
-    final h = local.hour % 12 == 0 ? 12 : local.hour % 12;
-    final m = local.minute.toString().padLeft(2, '0');
-    final ampm = local.hour < 12 ? 'AM' : 'PM';
-    return '${local.year}-${local.month.toString().padLeft(2, '0')}-'
-        '${local.day.toString().padLeft(2, '0')}  $h:$m $ampm';
-  }
 }
 
 class _NotFound extends StatelessWidget {
@@ -223,6 +198,26 @@ class _NotFound extends StatelessWidget {
             onPressed: () => context.go('/'),
             child: const Text('Back to journal'),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LoadError extends StatelessWidget {
+  const _LoadError({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Couldn't load this entry", style: text.titleMedium),
+          const SizedBox(height: 12),
+          FilledButton(onPressed: onRetry, child: const Text('Retry')),
         ],
       ),
     );

@@ -58,60 +58,77 @@ class EntriesRepository {
     return _client.storage.from(_photoBucket).createSignedUrl(path, expiresIn);
   }
 
-  /// Inserts [draft], optionally uploading [photoBytes] first. Returns the
-  /// saved entry (with DB-assigned fields).
+  /// Inserts [draft], then uploads [photoBytes] if given. The row is written
+  /// first so a failed insert never orphans an uploaded photo; if the upload
+  /// then fails, the entry simply has no photo (recoverable via edit).
   Future<FoodEntry> create(FoodEntry draft, {Uint8List? photoBytes}) async {
     final id = _uuid.v4();
-    String? photoPath;
-    if (photoBytes != null) {
-      photoPath = await uploadPhoto(entryId: id, bytes: photoBytes);
-    }
-
-    final payload = {
-      'id': id,
-      ...draft.copyWith(photoPath: photoPath).toInsert(),
-    };
-
     final row = await _client
         .from('food_entries')
-        .insert(payload)
+        .insert({'id': id, ...draft.toInsert()})
         .select()
         .single();
-    return FoodEntry.fromMap(row);
+    var saved = FoodEntry.fromMap(row);
+
+    if (photoBytes != null) {
+      final path = await uploadPhoto(entryId: id, bytes: photoBytes);
+      saved = await _setPhotoPath(id, path);
+    }
+    return saved;
   }
 
-  /// Updates an existing entry. If [newPhotoBytes] is given, uploads a
-  /// replacement photo (same path, upsert) and updates photo_path.
+  /// Updates an existing entry. Writes the fields first, then (if a new photo is
+  /// given) uploads it, so a failed field update never overwrites the existing
+  /// photo the upsert would replace.
   Future<FoodEntry> update(FoodEntry entry, {Uint8List? newPhotoBytes}) async {
     final id = entry.id;
     if (id == null) throw ArgumentError('Cannot update an unsaved entry.');
 
-    var photoPath = entry.photoPath;
-    if (newPhotoBytes != null) {
-      photoPath = await uploadPhoto(entryId: id, bytes: newPhotoBytes);
-    }
-
     final row = await _client
         .from('food_entries')
-        .update(entry.copyWith(photoPath: photoPath).toInsert())
+        .update(entry.toInsert())
+        .eq('id', id)
+        .select()
+        .single();
+    var saved = FoodEntry.fromMap(row);
+
+    if (newPhotoBytes != null) {
+      final path = await uploadPhoto(entryId: id, bytes: newPhotoBytes);
+      if (path != saved.photoPath) saved = await _setPhotoPath(id, path);
+    }
+    return saved;
+  }
+
+  Future<FoodEntry> _setPhotoPath(String id, String path) async {
+    final row = await _client
+        .from('food_entries')
+        .update({'photo_path': path})
         .eq('id', id)
         .select()
         .single();
     return FoodEntry.fromMap(row);
   }
 
-  /// Deletes an entry and its photo. Removes the storage object first so a
-  /// failed row delete doesn't orphan the file silently.
+  /// Deletes an entry and its photo. Removes the row first so a failed delete
+  /// never leaves a live row pointing at an already-deleted photo; a leftover
+  /// storage object (if the row delete succeeds but removal fails) is only
+  /// wasted space, not a broken reference.
   Future<void> delete(FoodEntry entry) async {
     final id = entry.id;
     if (id == null) return;
+    await _client.from('food_entries').delete().eq('id', id);
     if (entry.photoPath != null) {
       await _client.storage.from(_photoBucket).remove([entry.photoPath!]);
     }
-    await _client.from('food_entries').delete().eq('id', id);
   }
 }
 
 final entriesRepositoryProvider = Provider<EntriesRepository>((ref) {
   return EntriesRepository(ref.watch(supabaseClientProvider));
+});
+
+/// Signed URL for a stored photo path, cached per path. Invalidate this for a
+/// path after replacing that photo so viewers re-fetch a fresh URL.
+final photoUrlProvider = FutureProvider.family<String, String>((ref, path) {
+  return ref.watch(entriesRepositoryProvider).photoUrl(path);
 });

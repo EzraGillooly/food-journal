@@ -37,7 +37,11 @@ class AppTheme {
   final String headingFont;
   final String bodyFont;
 
-  /// Primary theme — matches the reference aesthetic.
+  /// Text/icon colour that sits on top of [primary]-filled surfaces. Centralised
+  /// so on-primary contrast lives in one place instead of hardcoded per widget.
+  Color get onPrimary => Colors.white;
+
+  /// Primary theme - matches the reference aesthetic.
   static const softBlush = AppTheme(
     preset: AppThemePreset.softBlush,
     label: 'Soft Blush',

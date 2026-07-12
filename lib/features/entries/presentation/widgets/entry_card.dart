@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/theme_provider.dart';
+import '../../../../core/utils/date_format.dart';
 import '../../../../shared/category_tag.dart';
+import '../../../../shared/made_bought_label.dart';
+import '../../../../shared/rating_badge.dart';
 import '../../data/food_entry.dart';
 import 'entry_photo.dart';
 
@@ -15,7 +17,6 @@ class EntryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = ref.watch(themeControllerProvider);
     final text = Theme.of(context).textTheme;
 
     return Card(
@@ -46,7 +47,7 @@ class EntryCard extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      _RatingBadge(rating: entry.rating),
+                      RatingBadge(rating: entry.rating),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -54,61 +55,18 @@ class EntryCard extends ConsumerWidget {
                     children: [
                       CategoryTag(category: entry.category),
                       const SizedBox(width: 8),
-                      Icon(
-                        entry.isHomemade
-                            ? Icons.soup_kitchen
-                            : Icons.storefront,
-                        size: 15,
-                        color: theme.inkMuted,
-                      ),
-                      const SizedBox(width: 4),
+                      MadeBoughtLabel(isHomemade: entry.isHomemade),
+                      const Spacer(),
                       Text(
-                        entry.isHomemade ? 'Made it' : 'Bought it',
+                        formatEntryTime(entry.eatenAt),
                         style: text.bodySmall,
                       ),
-                      const Spacer(),
-                      Text(_time(entry.eatenAt), style: text.bodySmall),
                     ],
                   ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  String _time(DateTime d) {
-    final local = d.toLocal();
-    final h = local.hour % 12 == 0 ? 12 : local.hour % 12;
-    final m = local.minute.toString().padLeft(2, '0');
-    final ampm = local.hour < 12 ? 'AM' : 'PM';
-    return '$h:$m $ampm';
-  }
-}
-
-class _RatingBadge extends ConsumerWidget {
-  const _RatingBadge({required this.rating});
-
-  final int rating;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = ref.watch(themeControllerProvider);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: theme.primary,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        '$rating/10',
-        style: TextStyle(
-          fontFamily: theme.bodyFont,
-          fontWeight: FontWeight.w600,
-          fontSize: 13,
-          color: Colors.white,
         ),
       ),
     );

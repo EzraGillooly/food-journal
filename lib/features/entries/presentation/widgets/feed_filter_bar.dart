@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../../shared/selectable_chip.dart';
 import '../../application/feed_filter.dart';
 import '../../data/food_category.dart';
 
@@ -28,6 +28,12 @@ class _FeedFilterBarState extends ConsumerState<FeedFilterBar> {
     final theme = ref.watch(themeControllerProvider);
     final filter = ref.watch(feedFilterProvider);
     final ctrl = ref.read(feedFilterProvider.notifier);
+
+    // Keep the text field in sync when the query is changed elsewhere (e.g. the
+    // "Clear filters" button), so the box never shows a stale search term.
+    ref.listen(feedFilterProvider.select((f) => f.query), (_, query) {
+      if (_search.text != query) _search.text = query;
+    });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,16 +61,14 @@ class _FeedFilterBarState extends ConsumerState<FeedFilterBar> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _FilterChip(
-                theme: theme,
+              SelectableChip(
                 label: 'All',
                 selected: filter.category == null,
                 onTap: () => ctrl.setCategory(null),
               ),
               for (final c in FoodCategory.values) ...[
                 const SizedBox(width: 8),
-                _FilterChip(
-                  theme: theme,
+                SelectableChip(
                   label: c.label,
                   icon: c.icon,
                   selected: filter.category == c,
@@ -78,8 +82,7 @@ class _FeedFilterBarState extends ConsumerState<FeedFilterBar> {
         Row(
           children: [
             for (final s in MadeBoughtFilter.values) ...[
-              _FilterChip(
-                theme: theme,
+              SelectableChip(
                 label: _sourceLabel(s),
                 selected: filter.source == s,
                 onTap: () => ctrl.setSource(s),
@@ -97,62 +100,4 @@ class _FeedFilterBarState extends ConsumerState<FeedFilterBar> {
     MadeBoughtFilter.made => 'Made',
     MadeBoughtFilter.bought => 'Bought',
   };
-}
-
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.theme,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.icon,
-  });
-
-  final AppTheme theme;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final IconData? icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? theme.primary : theme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected
-                ? theme.primary
-                : theme.inkMuted.withValues(alpha: 0.35),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
-                size: 14,
-                color: selected ? Colors.white : theme.inkMuted,
-              ),
-              const SizedBox(width: 5),
-            ],
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: theme.bodyFont,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: selected ? Colors.white : theme.ink,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

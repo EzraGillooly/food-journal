@@ -41,11 +41,3 @@ class EntryPhoto extends ConsumerWidget {
     );
   }
 }
-
-/// Signed URL for a stored photo path, cached per path for the session.
-final photoUrlProvider = FutureProvider.family<String, String>((
-  ref,
-  path,
-) async {
-  return ref.watch(entriesRepositoryProvider).photoUrl(path);
-});

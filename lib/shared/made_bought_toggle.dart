@@ -75,7 +75,7 @@ class MadeBoughtToggle extends ConsumerWidget {
                 Icon(
                   icon,
                   size: 18,
-                  color: selected ? Colors.white : theme.inkMuted,
+                  color: selected ? theme.onPrimary : theme.inkMuted,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -84,7 +84,7 @@ class MadeBoughtToggle extends ConsumerWidget {
                     fontFamily: theme.bodyFont,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
-                    color: selected ? Colors.white : theme.inkMuted,
+                    color: selected ? theme.onPrimary : theme.inkMuted,
                   ),
                 ),
               ],

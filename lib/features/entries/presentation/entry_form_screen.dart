@@ -5,10 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
+import '../../../core/utils/date_format.dart';
 import '../../../shared/made_bought_toggle.dart';
 import '../../../shared/rating_control.dart';
+import '../../../shared/selectable_chip.dart';
 import '../application/entries_controller.dart';
 import '../data/food_category.dart';
 import '../data/food_entry.dart';
@@ -32,6 +33,25 @@ class EntryEditScreen extends ConsumerWidget {
 
     if (entriesAsync.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (entriesAsync.hasError) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Couldn't load this entry"),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () =>
+                    ref.read(entriesControllerProvider.notifier).refresh(),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     if (entry == null) {
       return Scaffold(
@@ -422,47 +442,18 @@ class _CategoryPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = ref.watch(themeControllerProvider);
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
         for (final c in FoodCategory.values)
-          _chip(theme, c, c == selected, () => onChanged(c)),
-      ],
-    );
-  }
-
-  Widget _chip(AppTheme theme, FoodCategory c, bool sel, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: sel ? theme.primary : theme.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: sel ? theme.primary : theme.inkMuted.withValues(alpha: 0.4),
+          SelectableChip(
+            label: c.label,
+            icon: c.icon,
+            selected: c == selected,
+            onTap: () => onChanged(c),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(c.icon, size: 15, color: sel ? Colors.white : theme.inkMuted),
-            const SizedBox(width: 6),
-            Text(
-              c.label,
-              style: TextStyle(
-                fontFamily: theme.bodyFont,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: sel ? Colors.white : theme.ink,
-              ),
-            ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
@@ -491,7 +482,7 @@ class _DateTimeField extends ConsumerWidget {
             Icon(Icons.schedule, size: 18, color: theme.inkMuted),
             const SizedBox(width: 10),
             Text(
-              _format(value),
+              formatEntryDateTime(value),
               style: TextStyle(
                 fontFamily: theme.bodyFont,
                 fontSize: 15,
@@ -502,13 +493,5 @@ class _DateTimeField extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  String _format(DateTime d) {
-    final h = d.hour % 12 == 0 ? 12 : d.hour % 12;
-    final m = d.minute.toString().padLeft(2, '0');
-    final ampm = d.hour < 12 ? 'AM' : 'PM';
-    return '${d.year}-${d.month.toString().padLeft(2, '0')}-'
-        '${d.day.toString().padLeft(2, '0')}  $h:$m $ampm';
   }
 }
