@@ -49,3 +49,6 @@ app.*.map.json
 
 # Local dev-server config (may contain keys)
 .claude/launch.json
+
+# Internal planning docs (kept locally, not in repo)
+docs/
