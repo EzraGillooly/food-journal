@@ -7,7 +7,7 @@ import '../../../core/utils/date_format.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/category_tag.dart';
 import '../../../shared/made_bought_label.dart';
-import '../../../shared/rating_badge.dart';
+import '../../../shared/rating_stars.dart';
 import '../application/entries_controller.dart';
 import '../application/feed_filter.dart';
 import '../data/food_entry.dart';
@@ -176,7 +176,7 @@ class _TimelineTile extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        RatingBadge(rating: entry.rating),
+                        RatingStars(rating: entry.rating, size: 15),
                       ],
                     ),
                     const SizedBox(height: 7),

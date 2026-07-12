@@ -8,9 +8,8 @@ import 'core/supabase/supabase_providers.dart';
 import 'features/auth/presentation/forgot_password_screen.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/signup_screen.dart';
-import 'features/entries/presentation/entry_detail_screen.dart';
-import 'features/entries/presentation/entry_form_screen.dart';
 import 'features/calendar/presentation/calendar_screen.dart';
+import 'features/entries/presentation/entry_detail_screen.dart';
 import 'features/entries/presentation/journal_screen.dart';
 import 'features/home/presentation/home_screen.dart';
 import 'features/insights/presentation/insights_screen.dart';
@@ -83,18 +82,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
-        path: '/new',
-        builder: (context, state) => const EntryFormScreen(),
-      ),
-      GoRoute(
         path: '/entry/:id',
         builder: (context, state) =>
             EntryDetailScreen(entryId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/entry/:id/edit',
-        builder: (context, state) =>
-            EntryEditScreen(entryId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/settings',

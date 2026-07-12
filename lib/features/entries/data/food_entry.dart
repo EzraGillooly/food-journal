@@ -1,47 +1,66 @@
+import 'dish.dart';
 import 'food_category.dart';
 
-/// A single food-journal entry. Mirrors the `food_entries` table (migration
-/// 0001). [id]/[userId]/[createdAt] are assigned by Postgres on insert, so they
-/// are nullable on a not-yet-saved draft.
+/// A single food-journal entry. Mirrors the `food_entries` table (migrations
+/// 0001 + 0003). [id]/[userId]/[createdAt] are assigned by Postgres on insert,
+/// so they are nullable on a not-yet-saved draft.
+///
+/// An entry holds one or more [dishes] (one photo, possibly several dishes).
+/// The legacy `name`/`rating`/`notes`/`recipe` columns mirror the primary dish
+/// so the feed's sort, search, and older rows keep working.
 class FoodEntry {
   const FoodEntry({
     this.id,
     this.userId,
-    required this.name,
-    required this.rating,
+    required this.dishes,
     required this.category,
     required this.isHomemade,
-    this.notes,
-    this.recipe,
     this.location,
     this.photoPath,
     required this.eatenAt,
     this.createdAt,
-  });
+  }) : assert(dishes.length > 0, 'an entry needs at least one dish');
 
   final String? id;
   final String? userId;
-  final String name;
-  final int rating;
+  final List<Dish> dishes;
   final FoodCategory category;
   final bool isHomemade;
-  final String? notes;
-  final String? recipe;
   final String? location;
   final String? photoPath;
   final DateTime eatenAt;
   final DateTime? createdAt;
 
+  Dish get primary => dishes.first;
+  String get name => primary.name;
+  int get rating => primary.rating;
+  String? get notes => primary.notes;
+  String? get recipe => primary.recipe;
+
   factory FoodEntry.fromMap(Map<String, dynamic> map) {
+    final raw = map['dishes'];
+    final List<Dish> dishes;
+    if (raw is List && raw.isNotEmpty) {
+      dishes = raw
+          .map((d) => Dish.fromMap((d as Map).cast<String, dynamic>()))
+          .toList();
+    } else {
+      // Legacy row without a dishes array: synthesize one from the columns.
+      dishes = [
+        Dish(
+          name: map['name'] as String,
+          rating: (map['rating'] as num).toInt(),
+          notes: map['notes'] as String?,
+          recipe: map['recipe'] as String?,
+        ),
+      ];
+    }
     return FoodEntry(
       id: map['id'] as String?,
       userId: map['user_id'] as String?,
-      name: map['name'] as String,
-      rating: (map['rating'] as num).toInt(),
+      dishes: dishes,
       category: FoodCategory.fromWire(map['category'] as String),
       isHomemade: map['is_homemade'] as bool,
-      notes: map['notes'] as String?,
-      recipe: map['recipe'] as String?,
       location: map['location'] as String?,
       photoPath: map['photo_path'] as String?,
       eatenAt: DateTime.parse(map['eaten_at'] as String),
@@ -52,16 +71,18 @@ class FoodEntry {
   }
 
   /// Columns to write on insert/update. Omits DB-managed fields (id, user_id,
-  /// created_at, updated_at); `user_id` defaults to auth.uid() in Postgres.
+  /// created_at, updated_at). The legacy name/rating/notes/recipe columns are
+  /// kept in sync with the primary dish.
   Map<String, dynamic> toInsert() {
     return {
-      'name': name,
-      'rating': rating,
+      'name': primary.name,
+      'rating': primary.rating,
+      'notes': Dish.clean(primary.notes),
+      'recipe': Dish.clean(primary.recipe),
+      'dishes': dishes.map((d) => d.toMap()).toList(),
       'category': category.wire,
       'is_homemade': isHomemade,
-      'notes': _emptyToNull(notes),
-      'recipe': _emptyToNull(recipe),
-      'location': _emptyToNull(location),
+      'location': Dish.clean(location),
       'photo_path': photoPath,
       'eaten_at': eatenAt.toUtc().toIso8601String(),
     };
@@ -71,22 +92,13 @@ class FoodEntry {
     return FoodEntry(
       id: id,
       userId: userId,
-      name: name,
-      rating: rating,
+      dishes: dishes,
       category: category,
       isHomemade: isHomemade,
-      notes: notes,
-      recipe: recipe,
       location: location,
       photoPath: photoPath ?? this.photoPath,
       eatenAt: eatenAt,
       createdAt: createdAt,
     );
-  }
-
-  static String? _emptyToNull(String? v) {
-    if (v == null) return null;
-    final t = v.trim();
-    return t.isEmpty ? null : t;
   }
 }

@@ -7,9 +7,11 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/utils/date_format.dart';
 import '../../../shared/category_tag.dart';
 import '../../../shared/made_bought_label.dart';
-import '../../../shared/rating_badge.dart';
+import '../../../shared/rating_stars.dart';
 import '../application/entries_controller.dart';
+import '../data/dish.dart';
 import '../data/food_entry.dart';
+import 'entry_form_dialog.dart';
 import 'widgets/entry_photo.dart';
 
 /// Full-screen view of one entry (F4). Deep-linkable at /entry/:id. Because the
@@ -44,7 +46,7 @@ class EntryDetailScreen extends ConsumerWidget {
                 IconButton(
                   tooltip: 'Edit',
                   icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => context.go('/entry/${entry.id}/edit'),
+                  onPressed: () => showEntryForm(context, existing: entry),
                 ),
                 IconButton(
                   tooltip: 'Delete',
@@ -94,7 +96,7 @@ class EntryDetailScreen extends ConsumerWidget {
   }
 }
 
-class _Detail extends StatelessWidget {
+class _Detail extends StatefulWidget {
   const _Detail({required this.entry, required this.theme, required this.text});
 
   final FoodEntry entry;
@@ -102,8 +104,22 @@ class _Detail extends StatelessWidget {
   final TextTheme text;
 
   @override
+  State<_Detail> createState() => _DetailState();
+}
+
+class _DetailState extends State<_Detail> {
+  int _dish = 0;
+
+  @override
   Widget build(BuildContext context) {
+    final entry = widget.entry;
+    final theme = widget.theme;
+    final text = widget.text;
     final wide = MediaQuery.sizeOf(context).width >= 760;
+    if (_dish >= entry.dishes.length) _dish = 0;
+    final dish = entry.dishes[_dish];
+    final multi = entry.dishes.length > 1;
+
     return ListView(
       padding: EdgeInsets.zero,
       children: [
@@ -131,13 +147,23 @@ class _Detail extends StatelessWidget {
                       color: theme.primary,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
+                  // Dish tabs when there is more than one dish.
+                  if (multi) ...[
+                    _DishTabs(
+                      theme: theme,
+                      dishes: entry.dishes,
+                      active: _dish,
+                      onSelect: (i) => setState(() => _dish = i),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         child: Text(
-                          entry.name,
+                          dish.name,
                           style: TextStyle(
                             fontFamily: theme.headingFont,
                             fontSize: wide ? 38 : 30,
@@ -149,14 +175,14 @@ class _Detail extends StatelessWidget {
                       const SizedBox(width: 14),
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
-                        child: RatingBadge(rating: entry.rating),
+                        child: RatingStars(rating: dish.rating, size: 22),
                       ),
                     ],
                   ),
-                  if (entry.notes != null && entry.notes!.isNotEmpty) ...[
+                  if (dish.notes != null && dish.notes!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
-                      entry.notes!,
+                      dish.notes!,
                       style: TextStyle(
                         fontFamily: theme.bodyFont,
                         fontSize: 16.5,
@@ -165,7 +191,11 @@ class _Detail extends StatelessWidget {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 20),
+                  if (dish.recipe != null && dish.recipe!.isNotEmpty)
+                    _pullBlock(theme, 'Ingredients & recipe', dish.recipe!),
+                  const SizedBox(height: 24),
+                  Divider(color: theme.inkMuted.withValues(alpha: 0.15)),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       CategoryTag(category: entry.category),
@@ -175,12 +205,15 @@ class _Detail extends StatelessWidget {
                   ),
                   if (entry.location != null && entry.location!.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    _row(Icons.place_outlined, entry.location!),
+                    _row(theme, text, Icons.place_outlined, entry.location!),
                   ],
                   const SizedBox(height: 8),
-                  _row(Icons.schedule, formatEntryDateTime(entry.eatenAt)),
-                  if (entry.recipe != null && entry.recipe!.isNotEmpty)
-                    _pullBlock('Ingredients & recipe', entry.recipe!),
+                  _row(
+                    theme,
+                    text,
+                    Icons.schedule,
+                    formatEntryDateTime(entry.eatenAt),
+                  ),
                 ],
               ),
             ),
@@ -190,7 +223,7 @@ class _Detail extends StatelessWidget {
     );
   }
 
-  Widget _row(IconData icon, String value) {
+  Widget _row(AppTheme theme, TextTheme text, IconData icon, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -203,7 +236,7 @@ class _Detail extends StatelessWidget {
     );
   }
 
-  Widget _pullBlock(String title, String body) {
+  Widget _pullBlock(AppTheme theme, String title, String body) {
     return Container(
       margin: const EdgeInsets.only(top: 22),
       padding: const EdgeInsets.fromLTRB(18, 15, 18, 17),
@@ -240,6 +273,7 @@ class _Detail extends StatelessWidget {
   }
 
   String _eyebrow() {
+    final entry = widget.entry;
     final made = entry.isHomemade ? 'made' : 'bought';
     final local = entry.eatenAt.toLocal();
     final today = DateTime.now();
@@ -252,6 +286,57 @@ class _Detail extends StatelessWidget {
         ? 'yesterday'
         : '$diff days ago';
     return '${entry.category.label} · $made · $when';
+  }
+}
+
+/// Tab selector for switching between an entry's dishes on the detail view.
+class _DishTabs extends StatelessWidget {
+  const _DishTabs({
+    required this.theme,
+    required this.dishes,
+    required this.active,
+    required this.onSelect,
+  });
+
+  final AppTheme theme;
+  final List<Dish> dishes;
+  final int active;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (var i = 0; i < dishes.length; i++)
+          InkWell(
+            onTap: () => onSelect(i),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: i == active ? theme.primary : theme.surface,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: i == active
+                      ? theme.primary
+                      : theme.inkMuted.withValues(alpha: 0.4),
+                ),
+              ),
+              child: Text(
+                dishes[i].name,
+                style: TextStyle(
+                  fontFamily: theme.bodyFont,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w500,
+                  color: i == active ? theme.onPrimary : theme.ink,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 

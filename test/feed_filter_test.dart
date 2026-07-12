@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:food_journal/features/entries/application/feed_filter.dart';
+import 'package:food_journal/features/entries/data/dish.dart';
 import 'package:food_journal/features/entries/data/food_category.dart';
 import 'package:food_journal/features/entries/data/food_entry.dart';
 
@@ -8,8 +9,7 @@ FoodEntry _e({
   FoodCategory category = FoodCategory.dinner,
   bool homemade = true,
 }) => FoodEntry(
-  name: name,
-  rating: 8,
+  dishes: [Dish(name: name, rating: 8)],
   category: category,
   isHomemade: homemade,
   eatenAt: DateTime.utc(2026, 7, 11),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme_provider.dart';
 import '../../../shared/app_shell.dart';
+import '../../../shared/rating_stars.dart';
 import '../../entries/application/entries_controller.dart';
 import '../../entries/application/journal_stats.dart';
 import '../../entries/data/food_entry.dart';
@@ -113,15 +114,25 @@ class _Cover extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Highest rated lately · ${entry.rating}/10',
-                        style: TextStyle(
-                          fontFamily: theme.bodyFont,
-                          fontSize: 11.5,
-                          letterSpacing: 1.4,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            'Highest rated lately',
+                            style: TextStyle(
+                              fontFamily: theme.bodyFont,
+                              fontSize: 11.5,
+                              letterSpacing: 1.4,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          RatingStars(
+                            rating: entry.rating,
+                            size: 15,
+                            color: Colors.white,
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -235,11 +246,8 @@ class _LatelyGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const gap = 16.0;
-    final cols = maxWidth >= 900
-        ? 3
-        : maxWidth >= 560
-        ? 2
-        : 1;
+    // Horizontal cards are wide, so at most two across.
+    final cols = maxWidth >= 720 ? 2 : 1;
     final cardW = (maxWidth - 16 * 2 - gap * (cols - 1)) / cols;
     return Wrap(
       spacing: gap,

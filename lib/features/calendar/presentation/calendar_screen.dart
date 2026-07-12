@@ -8,7 +8,7 @@ import '../../../core/utils/date_format.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/category_tag.dart';
 import '../../../shared/made_bought_label.dart';
-import '../../../shared/rating_badge.dart';
+import '../../../shared/rating_stars.dart';
 import '../../entries/application/entries_controller.dart';
 import '../../entries/data/food_entry.dart';
 import '../../entries/presentation/widgets/entry_photo.dart';
@@ -362,7 +362,7 @@ class _DayEntryTile extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        RatingBadge(rating: entry.rating),
+                        RatingStars(rating: entry.rating, size: 15),
                       ],
                     ),
                     const SizedBox(height: 7),

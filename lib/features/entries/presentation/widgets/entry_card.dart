@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/theme/theme_provider.dart';
 import '../../../../core/utils/date_format.dart';
 import '../../../../shared/category_tag.dart';
 import '../../../../shared/made_bought_label.dart';
-import '../../../../shared/rating_badge.dart';
+import '../../../../shared/rating_stars.dart';
 import '../../data/food_entry.dart';
 import 'entry_photo.dart';
 
-/// A single entry in the feed: photo hero, name, category, made/bought, rating.
+/// A single entry as a horizontal card: a portrait photo on the left (phone
+/// photos are usually tall) and the dish info on the right.
 class EntryCard extends ConsumerWidget {
   const EntryCard({
     super.key,
@@ -26,56 +28,86 @@ class EntryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final text = Theme.of(context).textTheme;
+    final theme = ref.watch(themeControllerProvider);
+    final extraDishes = entry.dishes.length - 1;
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 14),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AspectRatio(
-              aspectRatio: 16 / 10,
-              child: photoOverride ?? EntryPhoto(photoPath: entry.photoPath),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        child: SizedBox(
+          height: 140,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 116,
+                child: photoOverride ?? EntryPhoto(photoPath: entry.photoPath),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Expanded(
-                        child: Text(
-                          entry.name,
-                          style: text.titleLarge,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        entry.name,
+                        style: TextStyle(
+                          fontFamily: theme.headingFont,
+                          fontSize: 18,
+                          height: 1.1,
+                          color: theme.ink,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 10),
-                      RatingBadge(rating: entry.rating),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      CategoryTag(category: entry.category),
-                      const SizedBox(width: 8),
-                      MadeBoughtLabel(isHomemade: entry.isHomemade),
-                      const Spacer(),
+                      const SizedBox(height: 8),
+                      RatingStars(rating: entry.rating, size: 17),
+                      if (extraDishes > 0) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          extraDishes == 1
+                              ? '+1 more dish'
+                              : '+$extraDishes more dishes',
+                          style: TextStyle(
+                            fontFamily: theme.bodyFont,
+                            fontSize: 11.5,
+                            color: theme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: CategoryTag(category: entry.category),
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: MadeBoughtLabel(
+                              isHomemade: entry.isHomemade,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
                       Text(
                         formatEntryTime(entry.eatenAt),
-                        style: text.bodySmall,
+                        style: TextStyle(
+                          fontFamily: theme.bodyFont,
+                          fontSize: 11.5,
+                          color: theme.inkMuted,
+                        ),
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

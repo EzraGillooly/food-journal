@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/theme/app_theme.dart';
 import '../core/theme/theme_provider.dart';
 import '../features/auth/application/auth_providers.dart';
+import '../features/entries/presentation/entry_form_dialog.dart';
 
 /// Width at or above which the app uses a desktop website layout (top nav);
 /// below it, a phone layout (top bar + bottom navigation).
@@ -44,7 +45,7 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       appBar: _TopBar(theme: theme, wide: wide, location: location),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/new'),
+        onPressed: () => showEntryForm(context),
         backgroundColor: theme.primary,
         foregroundColor: theme.onPrimary,
         icon: const Icon(Icons.add),
