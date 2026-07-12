@@ -117,11 +117,19 @@ class EntryDetailScreen extends ConsumerWidget {
 }
 
 class _Detail extends StatefulWidget {
-  const _Detail({required this.entry, required this.theme, required this.text});
+  const _Detail({
+    required this.entry,
+    required this.theme,
+    required this.text,
+    this.actions,
+  });
 
   final FoodEntry entry;
   final AppTheme theme;
   final TextTheme text;
+
+  /// Optional action buttons rendered inline with the title (popup only).
+  final List<Widget>? actions;
 
   @override
   State<_Detail> createState() => _DetailState();
@@ -175,27 +183,6 @@ class _DetailState extends State<_Detail> {
           _section(theme, 'Notes', dish.notes!),
         if (dish.recipe != null && dish.recipe!.isNotEmpty)
           _section(theme, 'Ingredients', dish.recipe!),
-        if (entry.location != null && entry.location!.isNotEmpty) ...[
-          const SizedBox(height: 18),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.place_outlined, size: 15, color: theme.inkMuted),
-                const SizedBox(width: 6),
-                Text(
-                  entry.location!,
-                  style: TextStyle(
-                    fontFamily: theme.bodyFont,
-                    fontSize: 13,
-                    color: theme.inkMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ],
     );
 
@@ -216,17 +203,8 @@ class _DetailState extends State<_Detail> {
             ),
             const SizedBox(height: 16),
           ],
-          // Dish title, centered above the image and info.
-          Text(
-            dish.name,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: theme.headingFont,
-              fontSize: wide ? 34 : 28,
-              height: 1.1,
-              color: theme.ink,
-            ),
-          ),
+          // Dish title, centered, with the actions inline on the right.
+          _titleHeader(theme, dish.name, wide),
           const SizedBox(height: 22),
           if (wide)
             Row(
@@ -248,8 +226,55 @@ class _DetailState extends State<_Detail> {
             const SizedBox(height: 22),
             info,
           ],
+          if (entry.location != null && entry.location!.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            Align(
+              alignment: Alignment.centerRight,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.place_outlined, size: 15, color: theme.inkMuted),
+                  const SizedBox(width: 6),
+                  Text(
+                    entry.location!,
+                    style: TextStyle(
+                      fontFamily: theme.bodyFont,
+                      fontSize: 13,
+                      color: theme.inkMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  /// Title centered, with the popup's actions inline on the right. An invisible
+  /// copy of the actions on the left keeps the title visually centered.
+  Widget _titleHeader(AppTheme theme, String title, bool wide) {
+    final titleText = Text(
+      title,
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        fontFamily: theme.headingFont,
+        fontSize: wide ? 34 : 28,
+        height: 1.1,
+        color: theme.ink,
+      ),
+    );
+    final actions = widget.actions;
+    if (actions == null || actions.isEmpty) return titleText;
+    final actionRow = Row(mainAxisSize: MainAxisSize.min, children: actions);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        IgnorePointer(child: Opacity(opacity: 0, child: actionRow)),
+        Expanded(child: titleText),
+        actionRow,
+      ],
     );
   }
 
@@ -398,48 +423,52 @@ class _EntryDetailDialog extends ConsumerWidget {
       // Wide enough to keep the meta row on one line; only as tall as needed.
       constraints: BoxConstraints(maxWidth: 840, maxHeight: size.height * 0.92),
       child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Compact action bar (no title — the title lives in the card body).
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 6, 6, 0),
-              child: Row(
-                children: [
-                  const Spacer(),
-                  if (entry != null) ...[
-                    IconButton(
-                      tooltip: 'Edit',
-                      icon: Icon(Icons.edit_outlined, color: theme.inkMuted),
-                      onPressed: () => showEntryForm(context, existing: entry),
+        child: entriesAsync.isLoading
+            ? const Padding(
+                padding: EdgeInsets.all(40),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            : entry == null
+            ? Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: IconButton(
+                        icon: Icon(Icons.close, color: theme.inkMuted),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
                     ),
-                    IconButton(
-                      tooltip: 'Delete',
-                      icon: Icon(Icons.delete_outline, color: theme.inkMuted),
-                      onPressed: () => _confirmDelete(context, ref, entry),
+                    const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Text('Entry not found'),
                     ),
                   ],
+                ),
+              )
+            : _Detail(
+                entry: entry,
+                theme: theme,
+                text: text,
+                actions: [
                   IconButton(
+                    tooltip: 'Edit',
+                    icon: Icon(Icons.edit_outlined, color: theme.inkMuted),
+                    onPressed: () => showEntryForm(context, existing: entry),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete',
+                    icon: Icon(Icons.delete_outline, color: theme.inkMuted),
+                    onPressed: () => _confirmDelete(context, ref, entry),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
                     icon: Icon(Icons.close, color: theme.inkMuted),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
-            ),
-            if (entriesAsync.isLoading)
-              const Padding(
-                padding: EdgeInsets.all(40),
-                child: CircularProgressIndicator(),
-              )
-            else if (entry == null)
-              const Padding(
-                padding: EdgeInsets.all(40),
-                child: Text('Entry not found'),
-              )
-            else
-              _Detail(entry: entry, theme: theme, text: text),
-          ],
-        ),
       ),
     );
   }
