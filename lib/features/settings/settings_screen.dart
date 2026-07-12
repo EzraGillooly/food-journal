@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
+import 'theme_creator.dart';
 
 /// Opens settings (theme picker) as a centered popup.
 Future<void> showSettings(BuildContext context) {
@@ -69,6 +70,31 @@ class _SettingsDialog extends ConsumerWidget {
                         .read(themeControllerProvider.notifier)
                         .select(t.preset),
                   ),
+                if (ref.read(themeControllerProvider.notifier).customTheme
+                    case final custom?)
+                  _ThemeOption(
+                    theme: custom,
+                    selected: active.preset == AppThemePreset.custom,
+                    onTap: () => ref
+                        .read(themeControllerProvider.notifier)
+                        .select(AppThemePreset.custom),
+                  ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => showThemeCreator(context),
+                  icon: Icon(
+                    ref.read(themeControllerProvider.notifier).customTheme ==
+                            null
+                        ? Icons.add
+                        : Icons.edit_outlined,
+                  ),
+                  label: Text(
+                    ref.read(themeControllerProvider.notifier).customTheme ==
+                            null
+                        ? 'Create a custom theme'
+                        : 'Edit custom theme',
+                  ),
+                ),
               ],
             ),
           ),

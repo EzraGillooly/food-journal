@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 ///
 /// Soft Blush is the primary theme; the others are saved alternates from the
 /// spec so the look can be swapped from one place (see [AppTheme.all]).
-enum AppThemePreset { softBlush, cottageCream, warmBakery, gardenFresh }
+enum AppThemePreset { softBlush, cottageCream, warmBakery, gardenFresh, custom }
 
 /// Immutable design tokens for a single theme preset.
 @immutable
@@ -37,9 +37,65 @@ class AppTheme {
   final String headingFont;
   final String bodyFont;
 
-  /// Text/icon colour that sits on top of [primary]-filled surfaces. Centralised
-  /// so on-primary contrast lives in one place instead of hardcoded per widget.
-  Color get onPrimary => Colors.white;
+  /// Text/icon colour that sits on top of [primary]-filled surfaces. Picks
+  /// white or a dark ink based on the primary's luminance, so custom themes
+  /// with a light primary stay legible.
+  Color get onPrimary => primary.computeLuminance() > 0.55
+      ? const Color(0xFF3A2A2E)
+      : Colors.white;
+
+  /// The colour tokens a user can customise, keyed by a stable name.
+  Map<String, Color> get colors => {
+    'background': background,
+    'surface': surface,
+    'primary': primary,
+    'secondary': secondary,
+    'ink': ink,
+    'inkMuted': inkMuted,
+    'tagBg': tagBg,
+    'tagInk': tagInk,
+  };
+
+  /// Builds a custom theme from a set of colours (fonts stay the app's own).
+  factory AppTheme.custom(Map<String, Color> c) => AppTheme(
+    preset: AppThemePreset.custom,
+    label: 'Custom',
+    background: c['background']!,
+    surface: c['surface']!,
+    primary: c['primary']!,
+    secondary: c['secondary']!,
+    ink: c['ink']!,
+    inkMuted: c['inkMuted']!,
+    tagBg: c['tagBg']!,
+    tagInk: c['tagInk']!,
+    headingFont: 'LibreBodoni',
+    bodyFont: 'Karla',
+  );
+
+  /// Serialises the colour tokens to a compact "name:hex,..." string.
+  String encodeColors() =>
+      colors.entries.map((e) => '${e.key}:${e.value.toARGB32()}').join(',');
+
+  /// Rebuilds a custom theme from [encodeColors]; null if malformed.
+  static AppTheme? decodeColors(String s) {
+    try {
+      final map = <String, Color>{};
+      for (final part in s.split(',')) {
+        final kv = part.split(':');
+        map[kv[0]] = Color(int.parse(kv[1]));
+      }
+      // Fall back to Soft Blush for any missing token.
+      for (final e in softBlush.colors.entries) {
+        map.putIfAbsent(e.key, () => e.value);
+      }
+      return AppTheme.custom(map);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// A sensible starting point when the user first creates a custom theme.
+  static AppTheme get customSeed => AppTheme.custom(softBlush.colors);
 
   /// Primary theme - matches the reference aesthetic.
   static const softBlush = AppTheme(
@@ -120,7 +176,7 @@ class AppTheme {
       secondary: secondary,
       surface: surface,
       brightness: Brightness.light,
-    ).copyWith(onPrimary: Colors.white, onSurface: ink);
+    ).copyWith(onPrimary: onPrimary, onSurface: ink);
 
     return ThemeData(
       useMaterial3: true,
@@ -142,7 +198,7 @@ class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: primary,
-          foregroundColor: Colors.white,
+          foregroundColor: onPrimary,
           minimumSize: const Size(44, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
