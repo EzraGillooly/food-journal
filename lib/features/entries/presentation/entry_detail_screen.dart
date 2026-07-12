@@ -127,145 +127,137 @@ class _DetailState extends State<_Detail> {
   Widget build(BuildContext context) {
     final entry = widget.entry;
     final theme = widget.theme;
-    final text = widget.text;
-    final wide = MediaQuery.sizeOf(context).width >= 760;
+    final wide = MediaQuery.sizeOf(context).width >= 720;
     if (_dish >= entry.dishes.length) _dish = 0;
     final dish = entry.dishes[_dish];
     final multi = entry.dishes.length > 1;
 
-    return ListView(
-      padding: EdgeInsets.zero,
+    final image = ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: AspectRatio(
+        aspectRatio: wide ? 3 / 4 : 4 / 3,
+        child: EntryPhoto(photoPath: entry.photoPath),
+      ),
+    );
+
+    final info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Full-bleed hero.
-        SizedBox(
-          height: wide ? 360 : 240,
-          width: double.infinity,
-          child: EntryPhoto(photoPath: entry.photoPath),
-        ),
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 580),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 26, 24, 40),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        // rating (stars) · time · category ......... made / bought
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Wrap(
+                spacing: 14,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
+                  RatingStars(rating: dish.rating, size: 20),
                   Text(
-                    _eyebrow().toUpperCase(),
+                    formatEntryDateTime(entry.eatenAt),
                     style: TextStyle(
                       fontFamily: theme.bodyFont,
-                      fontSize: 11,
-                      letterSpacing: 1.4,
-                      fontWeight: FontWeight.w700,
-                      color: theme.primary,
+                      fontSize: 12.5,
+                      color: theme.inkMuted,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  // Dish tabs when there is more than one dish.
-                  if (multi) ...[
-                    _DishTabs(
-                      theme: theme,
-                      dishes: entry.dishes,
-                      active: _dish,
-                      onSelect: (i) => setState(() => _dish = i),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          dish.name,
-                          style: TextStyle(
-                            fontFamily: theme.headingFont,
-                            fontSize: wide ? 38 : 30,
-                            height: 1.05,
-                            color: theme.ink,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: RatingStars(rating: dish.rating, size: 22),
-                      ),
-                    ],
-                  ),
-                  if (dish.notes != null && dish.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      dish.notes!,
-                      style: TextStyle(
-                        fontFamily: theme.bodyFont,
-                        fontSize: 16.5,
-                        height: 1.55,
-                        color: theme.ink,
-                      ),
-                    ),
-                  ],
-                  if (dish.recipe != null && dish.recipe!.isNotEmpty)
-                    _pullBlock(theme, 'Ingredients & recipe', dish.recipe!),
-                  const SizedBox(height: 24),
-                  Divider(color: theme.inkMuted.withValues(alpha: 0.15)),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      CategoryTag(category: entry.category),
-                      const SizedBox(width: 10),
-                      MadeBoughtLabel(isHomemade: entry.isHomemade),
-                    ],
-                  ),
-                  if (entry.location != null && entry.location!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    _row(theme, text, Icons.place_outlined, entry.location!),
-                  ],
-                  const SizedBox(height: 8),
-                  _row(
-                    theme,
-                    text,
-                    Icons.schedule,
-                    formatEntryDateTime(entry.eatenAt),
-                  ),
+                  CategoryTag(category: entry.category),
                 ],
               ),
             ),
+            const SizedBox(width: 12),
+            MadeBoughtLabel(isHomemade: entry.isHomemade),
+          ],
+        ),
+        if (entry.location != null && entry.location!.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.place_outlined, size: 15, color: theme.inkMuted),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  entry.location!,
+                  style: TextStyle(
+                    fontFamily: theme.bodyFont,
+                    fontSize: 13,
+                    color: theme.inkMuted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+        if (dish.notes != null && dish.notes!.isNotEmpty)
+          _section(theme, 'Notes', dish.notes!),
+        if (dish.recipe != null && dish.recipe!.isNotEmpty)
+          _section(theme, 'Ingredients', dish.recipe!),
+      ],
+    );
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
+      children: [
+        if (multi) ...[
+          Center(
+            child: _DishTabs(
+              theme: theme,
+              dishes: entry.dishes,
+              active: _dish,
+              onSelect: (i) => setState(() => _dish = i),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        // Dish title, centered above the image and info.
+        Text(
+          dish.name,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: theme.headingFont,
+            fontSize: wide ? 34 : 28,
+            height: 1.1,
+            color: theme.ink,
           ),
         ),
+        const SizedBox(height: 22),
+        if (wide)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 5, child: image),
+              const SizedBox(width: 28),
+              Expanded(
+                flex: 6,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: info,
+                ),
+              ),
+            ],
+          )
+        else ...[
+          image,
+          const SizedBox(height: 22),
+          info,
+        ],
       ],
     );
   }
 
-  Widget _row(AppTheme theme, TextTheme text, IconData icon, String value) {
+  Widget _section(AppTheme theme, String label, String body) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: theme.inkMuted),
-          const SizedBox(width: 8),
-          Expanded(child: Text(value, style: text.bodyMedium)),
-        ],
-      ),
-    );
-  }
-
-  Widget _pullBlock(AppTheme theme, String title, String body) {
-    return Container(
-      margin: const EdgeInsets.only(top: 22),
-      padding: const EdgeInsets.fromLTRB(18, 15, 18, 17),
-      decoration: BoxDecoration(
-        color: theme.background,
-        border: Border(left: BorderSide(color: theme.secondary, width: 3)),
-      ),
+      padding: const EdgeInsets.only(top: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title.toUpperCase(),
+            label.toUpperCase(),
             style: TextStyle(
               fontFamily: theme.bodyFont,
               fontSize: 11,
-              letterSpacing: 1.2,
+              letterSpacing: 1.3,
               fontWeight: FontWeight.w700,
               color: theme.inkMuted,
             ),
@@ -275,30 +267,14 @@ class _DetailState extends State<_Detail> {
             body,
             style: TextStyle(
               fontFamily: theme.bodyFont,
-              fontSize: 14.5,
-              height: 1.5,
+              fontSize: 15,
+              height: 1.55,
               color: theme.ink,
             ),
           ),
         ],
       ),
     );
-  }
-
-  String _eyebrow() {
-    final entry = widget.entry;
-    final made = entry.isHomemade ? 'made' : 'bought';
-    final local = entry.eatenAt.toLocal();
-    final today = DateTime.now();
-    final d0 = DateTime(today.year, today.month, today.day);
-    final d1 = DateTime(local.year, local.month, local.day);
-    final diff = d0.difference(d1).inDays;
-    final when = diff == 0
-        ? 'today'
-        : diff == 1
-        ? 'yesterday'
-        : '$diff days ago';
-    return '${entry.category.label} · $made · $when';
   }
 }
 
