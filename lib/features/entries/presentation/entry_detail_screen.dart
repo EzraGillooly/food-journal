@@ -14,6 +14,19 @@ import '../data/food_entry.dart';
 import 'entry_form_dialog.dart';
 import 'widgets/entry_photo.dart';
 
+/// Opens the entry detail as a centered popup (used from the cards).
+Future<void> showEntryDetail(BuildContext context, String entryId) {
+  return showDialog<void>(
+    context: context,
+    builder: (_) => Dialog(
+      insetPadding: const EdgeInsets.all(20),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: _EntryDetailDialog(entryId: entryId),
+    ),
+  );
+}
+
 /// Full-screen view of one entry (F4). Deep-linkable at /entry/:id. Because the
 /// entry comes from the user's own RLS-scoped list, a non-owner simply won't
 /// find it and sees the not-found state.
@@ -377,5 +390,113 @@ class _LoadError extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// The entry detail rendered as popup content: a compact header (edit / delete /
+/// close) over the same detail body used by the full-screen route.
+class _EntryDetailDialog extends ConsumerWidget {
+  const _EntryDetailDialog({required this.entryId});
+
+  final String entryId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(themeControllerProvider);
+    final text = Theme.of(context).textTheme;
+    final entriesAsync = ref.watch(entriesControllerProvider);
+    final entry = entriesAsync.value
+        ?.where((e) => e.id == entryId)
+        .cast<FoodEntry?>()
+        .firstOrNull;
+
+    final size = MediaQuery.sizeOf(context);
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: 640, maxHeight: size.height * 0.9),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: theme.inkMuted.withValues(alpha: 0.12),
+                ),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    entry?.name ?? 'Entry',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: theme.headingFont,
+                      fontSize: 20,
+                      color: theme.ink,
+                    ),
+                  ),
+                ),
+                if (entry != null) ...[
+                  IconButton(
+                    tooltip: 'Edit',
+                    icon: Icon(Icons.edit_outlined, color: theme.inkMuted),
+                    onPressed: () => showEntryForm(context, existing: entry),
+                  ),
+                  IconButton(
+                    tooltip: 'Delete',
+                    icon: Icon(Icons.delete_outline, color: theme.inkMuted),
+                    onPressed: () => _confirmDelete(context, ref, entry),
+                  ),
+                ],
+                IconButton(
+                  icon: Icon(Icons.close, color: theme.inkMuted),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: entriesAsync.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : entry == null
+                ? const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Text('Entry not found'),
+                  )
+                : _Detail(entry: entry, theme: theme, text: text),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    FoodEntry entry,
+  ) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete this entry?'),
+        content: Text('“${entry.name}” will be removed for good.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ref.read(entriesControllerProvider.notifier).remove(entry);
+    if (context.mounted) Navigator.of(context).pop();
   }
 }

@@ -8,6 +8,7 @@ import '../../../shared/rating_stars.dart';
 import '../../entries/application/entries_controller.dart';
 import '../../entries/application/journal_stats.dart';
 import '../../entries/data/food_entry.dart';
+import '../../entries/presentation/entry_detail_screen.dart';
 import '../../entries/presentation/widgets/entry_card.dart';
 import '../../entries/presentation/widgets/entry_photo.dart';
 
@@ -86,7 +87,7 @@ class _Cover extends ConsumerWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(wide ? 20 : 16),
         child: GestureDetector(
-          onTap: () => context.go('/entry/${entry.id}'),
+          onTap: () => showEntryDetail(context, entry.id!),
           child: SizedBox(
             height: wide ? 340 : 240,
             width: double.infinity,
@@ -258,7 +259,7 @@ class _LatelyGrid extends StatelessWidget {
             width: cols == 1 ? double.infinity : cardW,
             child: EntryCard(
               entry: e,
-              onTap: () => context.go('/entry/${e.id}'),
+              onTap: () => showEntryDetail(context, e.id!),
             ),
           ),
       ],
