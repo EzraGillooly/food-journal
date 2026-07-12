@@ -9,6 +9,7 @@ enum FoodCategory {
   lunch('lunch', 'Lunch', Icons.lunch_dining),
   dinner('dinner', 'Dinner', Icons.dinner_dining),
   snack('snack', 'Snack', Icons.cookie),
+  dessert('dessert', 'Dessert', Icons.icecream),
   drink('drink', 'Drink', Icons.local_cafe);
 
   const FoodCategory(this.wire, this.label, this.icon);

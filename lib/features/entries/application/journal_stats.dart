@@ -1,3 +1,4 @@
+import '../data/food_category.dart';
 import '../data/food_entry.dart';
 
 /// Derived, read-only summaries of a journal for Home and Insights. All values
@@ -8,6 +9,32 @@ class JournalStats {
   final List<FoodEntry> entries;
 
   int get total => entries.length;
+
+  int get madeCount => entries.where((e) => e.isHomemade).length;
+  int get boughtCount => total - madeCount;
+
+  /// Entry count per category, in enum order, only for non-empty categories.
+  Map<FoodCategory, int> get byCategory {
+    final counts = <FoodCategory, int>{};
+    for (final e in entries) {
+      counts[e.category] = (counts[e.category] ?? 0) + 1;
+    }
+    return {
+      for (final c in FoodCategory.values)
+        if (counts[c] != null) c: counts[c]!,
+    };
+  }
+
+  /// Count of entries at each whole-star rating bucket (1-5 stars), so a 9/10
+  /// counts toward 5 stars, 7/10 toward 4, etc.
+  List<int> get ratingBuckets {
+    final buckets = List.filled(5, 0);
+    for (final e in entries) {
+      final star = ((e.rating + 1) ~/ 2).clamp(1, 5); // 1..5
+      buckets[star - 1]++;
+    }
+    return buckets;
+  }
 
   double get avgRating {
     if (entries.isEmpty) return 0;
