@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -11,6 +10,7 @@ import '../../../shared/made_bought_label.dart';
 import '../../../shared/rating_stars.dart';
 import '../../entries/application/entries_controller.dart';
 import '../../entries/data/food_entry.dart';
+import '../../entries/presentation/entry_detail_screen.dart';
 import '../../entries/presentation/widgets/entry_photo.dart';
 
 const _monthNames = [
@@ -329,7 +329,7 @@ class _DayEntryTile extends ConsumerWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.go('/entry/${entry.id}'),
+        onTap: () => showEntryDetail(context, entry.id!),
         child: Padding(
           padding: const EdgeInsets.all(11),
           child: Row(

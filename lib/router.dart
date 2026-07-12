@@ -13,7 +13,6 @@ import 'features/entries/presentation/entry_detail_screen.dart';
 import 'features/entries/presentation/journal_screen.dart';
 import 'features/home/presentation/home_screen.dart';
 import 'features/insights/presentation/insights_screen.dart';
-import 'features/settings/settings_screen.dart';
 import 'shared/app_shell.dart';
 
 /// Turns a Stream into a Listenable so GoRouter re-evaluates redirects whenever
@@ -85,10 +84,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/entry/:id',
         builder: (context, state) =>
             EntryDetailScreen(entryId: state.pathParameters['id']!),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -9,6 +8,7 @@ import '../../../shared/category_tag.dart';
 import '../../entries/application/entries_controller.dart';
 import '../../entries/application/journal_stats.dart';
 import '../../entries/data/food_entry.dart';
+import '../../entries/presentation/entry_detail_screen.dart';
 import '../../entries/presentation/widgets/entry_photo.dart';
 
 /// Insights (Direction B): resurfaced memories + logging streak, plus a few
@@ -114,7 +114,7 @@ class _OnThisDay extends ConsumerWidget {
               margin: EdgeInsets.zero,
               clipBehavior: Clip.antiAlias,
               child: InkWell(
-                onTap: () => context.go('/entry/${e.id}'),
+                onTap: () => showEntryDetail(context, e.id!),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Row(

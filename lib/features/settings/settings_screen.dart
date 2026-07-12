@@ -1,48 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_provider.dart';
 
-/// Settings (F7): switch between the saved themes. The choice persists.
-class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+/// Opens settings (theme picker) as a centered popup.
+Future<void> showSettings(BuildContext context) {
+  return showDialog<void>(
+    context: context,
+    builder: (_) => Dialog(
+      insetPadding: const EdgeInsets.all(20),
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: const _SettingsDialog(),
+    ),
+  );
+}
+
+class _SettingsDialog extends ConsumerWidget {
+  const _SettingsDialog();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final active = ref.watch(themeControllerProvider);
+    final theme = active;
     final text = Theme.of(context).textTheme;
+    final size = MediaQuery.sizeOf(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
-        ),
-        title: const Text('Settings'),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Text('Theme', style: text.titleLarge),
-              const SizedBox(height: 4),
-              Text('Pick the look of your journal.', style: text.bodySmall),
-              const SizedBox(height: 16),
-              for (final theme in AppTheme.all)
-                _ThemeOption(
-                  theme: theme,
-                  selected: theme.preset == active.preset,
-                  onTap: () => ref
-                      .read(themeControllerProvider.notifier)
-                      .select(theme.preset),
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: 480, maxHeight: size.height * 0.9),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
+            child: Row(
+              children: [
+                Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontFamily: theme.headingFont,
+                    fontSize: 20,
+                    color: theme.ink,
+                  ),
                 ),
-            ],
+                const Spacer(),
+                IconButton(
+                  icon: Icon(Icons.close, color: theme.inkMuted),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
           ),
-        ),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+              children: [
+                Text('Theme', style: text.titleLarge),
+                const SizedBox(height: 4),
+                Text('Pick the look of your journal.', style: text.bodySmall),
+                const SizedBox(height: 16),
+                for (final t in AppTheme.all)
+                  _ThemeOption(
+                    theme: t,
+                    selected: t.preset == active.preset,
+                    onTap: () => ref
+                        .read(themeControllerProvider.notifier)
+                        .select(t.preset),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

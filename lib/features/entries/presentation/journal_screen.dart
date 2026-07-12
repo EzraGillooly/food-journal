@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/utils/date_format.dart';
@@ -11,6 +10,7 @@ import '../../../shared/rating_stars.dart';
 import '../application/entries_controller.dart';
 import '../application/feed_filter.dart';
 import '../data/food_entry.dart';
+import 'entry_detail_screen.dart';
 import 'widgets/entry_photo.dart';
 import 'widgets/feed_filter_bar.dart';
 
@@ -143,7 +143,7 @@ class _TimelineTile extends ConsumerWidget {
       margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => context.go('/entry/${entry.id}'),
+        onTap: () => showEntryDetail(context, entry.id!),
         child: Padding(
           padding: const EdgeInsets.all(11),
           child: Row(

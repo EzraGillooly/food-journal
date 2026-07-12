@@ -6,6 +6,7 @@ import '../core/theme/app_theme.dart';
 import '../core/theme/theme_provider.dart';
 import '../features/auth/application/auth_providers.dart';
 import '../features/entries/presentation/entry_form_dialog.dart';
+import '../features/settings/settings_screen.dart';
 
 /// Width at or above which the app uses a desktop website layout (top nav);
 /// below it, a phone layout (top bar + bottom navigation).
@@ -146,7 +147,7 @@ class _TopBar extends ConsumerWidget implements PreferredSizeWidget {
                             Icons.palette_outlined,
                             color: theme.inkMuted,
                           ),
-                          onPressed: () => context.go('/settings'),
+                          onPressed: () => showSettings(context),
                         ),
                         IconButton(
                           tooltip: 'Log out',
