@@ -10,6 +10,7 @@ import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/signup_screen.dart';
 import 'features/entries/presentation/entry_detail_screen.dart';
 import 'features/entries/presentation/entry_form_screen.dart';
+import 'features/calendar/presentation/calendar_screen.dart';
 import 'features/entries/presentation/journal_screen.dart';
 import 'features/home/presentation/home_screen.dart';
 import 'features/insights/presentation/insights_screen.dart';
@@ -68,6 +69,11 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/journal',
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: JournalScreen()),
+          ),
+          GoRoute(
+            path: '/calendar',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: CalendarScreen()),
           ),
           GoRoute(
             path: '/insights',

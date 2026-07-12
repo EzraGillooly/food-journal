@@ -23,6 +23,7 @@ class _Dest {
 const _destinations = [
   _Dest('/', 'Home', Icons.home_outlined),
   _Dest('/journal', 'Journal', Icons.menu_book_outlined),
+  _Dest('/calendar', 'Calendar', Icons.calendar_month_outlined),
   _Dest('/insights', 'Insights', Icons.insights_outlined),
 ];
 
@@ -77,7 +78,8 @@ class AppShell extends ConsumerWidget {
 
   int _indexFor(String location) {
     if (location.startsWith('/journal')) return 1;
-    if (location.startsWith('/insights')) return 2;
+    if (location.startsWith('/calendar')) return 2;
+    if (location.startsWith('/insights')) return 3;
     if (location == '/') return 0;
     return -1;
   }
@@ -117,12 +119,30 @@ class _TopBar extends ConsumerWidget implements PreferredSizeWidget {
                 height: 59,
                 child: Row(
                   children: [
-                    Text(
-                      'Food Journal',
-                      style: TextStyle(
-                        fontFamily: theme.headingFont,
-                        fontSize: 22,
-                        color: theme.ink,
+                    InkWell(
+                      onTap: () => context.go('/'),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.restaurant_menu,
+                              size: 22,
+                              color: theme.primary,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Food Journal',
+                              style: TextStyle(
+                                fontFamily: theme.headingFont,
+                                fontSize: 22,
+                                color: theme.ink,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     if (wide)
