@@ -10,8 +10,11 @@ import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/presentation/signup_screen.dart';
 import 'features/entries/presentation/entry_detail_screen.dart';
 import 'features/entries/presentation/entry_form_screen.dart';
-import 'features/entries/presentation/feed_screen.dart';
+import 'features/entries/presentation/journal_screen.dart';
+import 'features/home/presentation/home_screen.dart';
+import 'features/insights/presentation/insights_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'shared/app_shell.dart';
 
 /// Turns a Stream into a Listenable so GoRouter re-evaluates redirects whenever
 /// auth state changes.
@@ -53,7 +56,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/', builder: (context, state) => const FeedScreen()),
+      ShellRoute(
+        builder: (context, state, child) => AppShell(child: child),
+        routes: [
+          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+          GoRoute(
+            path: '/journal',
+            builder: (context, state) => const JournalScreen(),
+          ),
+          GoRoute(
+            path: '/insights',
+            builder: (context, state) => const InsightsScreen(),
+          ),
+        ],
+      ),
       GoRoute(
         path: '/new',
         builder: (context, state) => const EntryFormScreen(),

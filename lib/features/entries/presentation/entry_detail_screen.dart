@@ -103,62 +103,96 @@ class _Detail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 560),
-        child: ListView(
-          children: [
-            AspectRatio(
-              aspectRatio: 16 / 10,
-              child: EntryPhoto(photoPath: entry.photoPath),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
+    final wide = MediaQuery.sizeOf(context).width >= 760;
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        // Full-bleed hero.
+        SizedBox(
+          height: wide ? 360 : 240,
+          width: double.infinity,
+          child: EntryPhoto(photoPath: entry.photoPath),
+        ),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 580),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 26, 24, 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    _eyebrow().toUpperCase(),
+                    style: TextStyle(
+                      fontFamily: theme.bodyFont,
+                      fontSize: 11,
+                      letterSpacing: 1.4,
+                      fontWeight: FontWeight.w700,
+                      color: theme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(entry.name, style: text.displaySmall),
+                        child: Text(
+                          entry.name,
+                          style: TextStyle(
+                            fontFamily: theme.headingFont,
+                            fontSize: wide ? 38 : 30,
+                            height: 1.05,
+                            color: theme.ink,
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 12),
-                      RatingBadge(rating: entry.rating),
+                      const SizedBox(width: 14),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: RatingBadge(rating: entry.rating),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  if (entry.notes != null && entry.notes!.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      entry.notes!,
+                      style: TextStyle(
+                        fontFamily: theme.bodyFont,
+                        fontSize: 16.5,
+                        height: 1.55,
+                        color: theme.ink,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
                   Row(
                     children: [
                       CategoryTag(category: entry.category),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       MadeBoughtLabel(isHomemade: entry.isHomemade),
                     ],
                   ),
-                  const SizedBox(height: 20),
-                  _row(
-                    context,
-                    Icons.schedule,
-                    formatEntryDateTime(entry.eatenAt),
-                  ),
-                  if (entry.location != null && entry.location!.isNotEmpty)
-                    _row(context, Icons.place_outlined, entry.location!),
-                  if (entry.notes != null && entry.notes!.isNotEmpty)
-                    _section(text, 'Notes', entry.notes!),
+                  if (entry.location != null && entry.location!.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    _row(Icons.place_outlined, entry.location!),
+                  ],
+                  const SizedBox(height: 8),
+                  _row(Icons.schedule, formatEntryDateTime(entry.eatenAt)),
                   if (entry.recipe != null && entry.recipe!.isNotEmpty)
-                    _section(text, 'Ingredients / recipe', entry.recipe!),
-                  const SizedBox(height: 32),
+                    _pullBlock('Ingredients & recipe', entry.recipe!),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _row(BuildContext context, IconData icon, String value) {
+  Widget _row(IconData icon, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
           Icon(icon, size: 16, color: theme.inkMuted),
@@ -169,18 +203,55 @@ class _Detail extends StatelessWidget {
     );
   }
 
-  Widget _section(TextTheme text, String title, String body) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 18),
+  Widget _pullBlock(String title, String body) {
+    return Container(
+      margin: const EdgeInsets.only(top: 22),
+      padding: const EdgeInsets.fromLTRB(18, 15, 18, 17),
+      decoration: BoxDecoration(
+        color: theme.background,
+        border: Border(left: BorderSide(color: theme.secondary, width: 3)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: text.titleLarge),
-          const SizedBox(height: 6),
-          Text(body, style: text.bodyLarge),
+          Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontFamily: theme.bodyFont,
+              fontSize: 11,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w700,
+              color: theme.inkMuted,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            body,
+            style: TextStyle(
+              fontFamily: theme.bodyFont,
+              fontSize: 14.5,
+              height: 1.5,
+              color: theme.ink,
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  String _eyebrow() {
+    final made = entry.isHomemade ? 'made' : 'bought';
+    final local = entry.eatenAt.toLocal();
+    final today = DateTime.now();
+    final d0 = DateTime(today.year, today.month, today.day);
+    final d1 = DateTime(local.year, local.month, local.day);
+    final diff = d0.difference(d1).inDays;
+    final when = diff == 0
+        ? 'today'
+        : diff == 1
+        ? 'yesterday'
+        : '$diff days ago';
+    return '${entry.category.label} · $made · $when';
   }
 }
 
