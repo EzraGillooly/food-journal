@@ -117,23 +117,18 @@ class _TopBar extends ConsumerWidget implements PreferredSizeWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: SizedBox(
                 height: 59,
-                child: Row(
+                child: Stack(
+                  alignment: Alignment.center,
                   children: [
-                    InkWell(
-                      onTap: () => context.go('/'),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.restaurant_menu,
-                              size: 22,
-                              color: theme.primary,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
+                    // Brand on the left, actions on the right.
+                    Row(
+                      children: [
+                        InkWell(
+                          onTap: () => context.go('/'),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Text(
                               'Food Journal',
                               style: TextStyle(
                                 fontFamily: theme.headingFont,
@@ -141,40 +136,33 @@ class _TopBar extends ConsumerWidget implements PreferredSizeWidget {
                                 color: theme.ink,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (wide)
-                      Expanded(
-                        child: Center(
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              for (final d in _destinations)
-                                _NavLink(
-                                  theme: theme,
-                                  label: d.label,
-                                  active: _isActive(d.path),
-                                  onTap: () => context.go(d.path),
-                                ),
-                            ],
                           ),
                         ),
-                      )
-                    else
-                      const Spacer(),
-                    IconButton(
-                      tooltip: 'Settings',
-                      icon: Icon(Icons.palette_outlined, color: theme.inkMuted),
-                      onPressed: () => context.go('/settings'),
+                        const Spacer(),
+                        IconButton(
+                          tooltip: 'Settings',
+                          icon: Icon(
+                            Icons.palette_outlined,
+                            color: theme.inkMuted,
+                          ),
+                          onPressed: () => context.go('/settings'),
+                        ),
+                        IconButton(
+                          tooltip: 'Log out',
+                          icon: Icon(Icons.logout, color: theme.inkMuted),
+                          onPressed: () =>
+                              ref.read(authRepositoryProvider).signOut(),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      tooltip: 'Log out',
-                      icon: Icon(Icons.logout, color: theme.inkMuted),
-                      onPressed: () =>
-                          ref.read(authRepositoryProvider).signOut(),
-                    ),
+                    // Tabs centered in the full bar width.
+                    if (wide)
+                      _SlidingTabBar(
+                        theme: theme,
+                        destinations: _destinations,
+                        activeIndex: _activeIndex(),
+                        onTap: (path) => context.go(path),
+                      ),
                   ],
                 ),
               ),
@@ -189,10 +177,106 @@ class _TopBar extends ConsumerWidget implements PreferredSizeWidget {
     if (path == '/') return location == '/';
     return location.startsWith(path);
   }
+
+  int _activeIndex() {
+    for (var i = 0; i < _destinations.length; i++) {
+      if (_isActive(_destinations[i].path)) return i;
+    }
+    return 0;
+  }
 }
 
-class _NavLink extends StatelessWidget {
-  const _NavLink({
+/// Centered nav tabs with an underline that slides to the active tab.
+class _SlidingTabBar extends StatefulWidget {
+  const _SlidingTabBar({
+    required this.theme,
+    required this.destinations,
+    required this.activeIndex,
+    required this.onTap,
+  });
+
+  final AppTheme theme;
+  final List<_Dest> destinations;
+  final int activeIndex;
+  final void Function(String path) onTap;
+
+  @override
+  State<_SlidingTabBar> createState() => _SlidingTabBarState();
+}
+
+class _SlidingTabBarState extends State<_SlidingTabBar> {
+  final _stackKey = GlobalKey();
+  late List<GlobalKey> _tabKeys;
+  double? _left;
+  double? _width;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabKeys = List.generate(widget.destinations.length, (_) => GlobalKey());
+  }
+
+  void _measure() {
+    if (!mounted) return;
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    final tabBox =
+        _tabKeys[widget.activeIndex].currentContext?.findRenderObject()
+            as RenderBox?;
+    if (stackBox == null || tabBox == null) return;
+    final origin = tabBox.localToGlobal(Offset.zero, ancestor: stackBox);
+    if (_left != origin.dx || _width != tabBox.size.width) {
+      setState(() {
+        _left = origin.dx;
+        _width = tabBox.size.width;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Re-measure after layout each build (handles the active tab changing and
+    // window resizes); the guard in _measure prevents a setState loop.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+    final t = widget.theme;
+    return Stack(
+      key: _stackKey,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < widget.destinations.length; i++)
+              _Tab(
+                key: _tabKeys[i],
+                theme: t,
+                label: widget.destinations[i].label,
+                active: i == widget.activeIndex,
+                onTap: () => widget.onTap(widget.destinations[i].path),
+              ),
+          ],
+        ),
+        if (_left != null && _width != null)
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeInOutCubic,
+            left: _left,
+            width: _width,
+            bottom: 0,
+            height: 2,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: t.primary,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _Tab extends StatelessWidget {
+  const _Tab({
+    super.key,
     required this.theme,
     required this.label,
     required this.active,
@@ -206,33 +290,20 @@ class _NavLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 2),
-          child: Container(
-            padding: const EdgeInsets.only(bottom: 3),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: active ? theme.primary : Colors.transparent,
-                  width: 2,
-                ),
-              ),
-            ),
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: theme.bodyFont,
-                fontSize: 14,
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                color: active ? theme.ink : theme.inkMuted,
-              ),
-            ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 200),
+          style: TextStyle(
+            fontFamily: theme.bodyFont,
+            fontSize: 14,
+            fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+            color: active ? theme.ink : theme.inkMuted,
           ),
+          child: Text(label),
         ),
       ),
     );

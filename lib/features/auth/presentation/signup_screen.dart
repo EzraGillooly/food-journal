@@ -18,6 +18,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   bool _loading = false;
+  bool _showPassword = false;
   String? _error;
   bool _sent = false;
 
@@ -89,11 +90,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               const SizedBox(height: 14),
               TextFormField(
                 controller: _password,
-                obscureText: true,
+                obscureText: !_showPassword,
                 autofillHints: const [AutofillHints.newPassword],
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Password',
                   helperText: 'At least 6 characters',
+                  suffixIcon: IconButton(
+                    tooltip: _showPassword ? 'Hide password' : 'Show password',
+                    icon: Icon(
+                      _showPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                    ),
+                    onPressed: () =>
+                        setState(() => _showPassword = !_showPassword),
+                  ),
                 ),
                 onFieldSubmitted: (_) => _submit(),
                 validator: (v) => (v == null || v.length < 6)
