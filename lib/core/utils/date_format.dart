@@ -14,6 +14,12 @@ String formatEntryTime(DateTime d) {
   return '${_hour12(local)}:${_two(local.minute)} ${_ampm(local)}';
 }
 
+/// "2026-07-11" in the local zone (date only).
+String formatEntryDate(DateTime d) {
+  final local = d.toLocal();
+  return '${local.year}-${_two(local.month)}-${_two(local.day)}';
+}
+
 /// "2026-07-11  3:07 PM" in the local zone.
 String formatEntryDateTime(DateTime d) {
   final local = d.toLocal();

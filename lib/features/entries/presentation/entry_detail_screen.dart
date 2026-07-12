@@ -77,7 +77,14 @@ class EntryDetailScreen extends ConsumerWidget {
             )
           : entry == null
           ? _NotFound()
-          : _Detail(entry: entry, theme: theme, text: text),
+          : SingleChildScrollView(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 860),
+                  child: _Detail(entry: entry, theme: theme, text: text),
+                ),
+              ),
+            ),
     );
   }
 
@@ -142,42 +149,42 @@ class _DetailState extends State<_Detail> {
 
     final info = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // rating (stars) · time · category ......... made / bought
+        // date · rating (stars) · category .......... made / bought
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Wrap(
-                spacing: 14,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  RatingStars(rating: dish.rating, size: 20),
-                  Text(
-                    formatEntryDateTime(entry.eatenAt),
-                    style: TextStyle(
-                      fontFamily: theme.bodyFont,
-                      fontSize: 12.5,
-                      color: theme.inkMuted,
-                    ),
-                  ),
-                  CategoryTag(category: entry.category),
-                ],
+            Text(
+              formatEntryDate(entry.eatenAt),
+              style: TextStyle(
+                fontFamily: theme.bodyFont,
+                fontSize: 12.5,
+                color: theme.inkMuted,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
+            RatingStars(rating: dish.rating, size: 18),
+            const SizedBox(width: 10),
+            CategoryTag(category: entry.category),
+            const Spacer(),
+            const SizedBox(width: 8),
             MadeBoughtLabel(isHomemade: entry.isHomemade),
           ],
         ),
+        if (dish.notes != null && dish.notes!.isNotEmpty)
+          _section(theme, 'Notes', dish.notes!),
+        if (dish.recipe != null && dish.recipe!.isNotEmpty)
+          _section(theme, 'Ingredients', dish.recipe!),
         if (entry.location != null && entry.location!.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(Icons.place_outlined, size: 15, color: theme.inkMuted),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
+          const SizedBox(height: 18),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.place_outlined, size: 15, color: theme.inkMuted),
+                const SizedBox(width: 6),
+                Text(
                   entry.location!,
                   style: TextStyle(
                     fontFamily: theme.bodyFont,
@@ -185,64 +192,64 @@ class _DetailState extends State<_Detail> {
                     color: theme.inkMuted,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
-        if (dish.notes != null && dish.notes!.isNotEmpty)
-          _section(theme, 'Notes', dish.notes!),
-        if (dish.recipe != null && dish.recipe!.isNotEmpty)
-          _section(theme, 'Ingredients', dish.recipe!),
       ],
     );
 
-    return ListView(
+    return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 28),
-      children: [
-        if (multi) ...[
-          Center(
-            child: _DishTabs(
-              theme: theme,
-              dishes: entry.dishes,
-              active: _dish,
-              onSelect: (i) => setState(() => _dish = i),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (multi) ...[
+            Center(
+              child: _DishTabs(
+                theme: theme,
+                dishes: entry.dishes,
+                active: _dish,
+                onSelect: (i) => setState(() => _dish = i),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          // Dish title, centered above the image and info.
+          Text(
+            dish.name,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: theme.headingFont,
+              fontSize: wide ? 34 : 28,
+              height: 1.1,
+              color: theme.ink,
             ),
           ),
-          const SizedBox(height: 16),
-        ],
-        // Dish title, centered above the image and info.
-        Text(
-          dish.name,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: theme.headingFont,
-            fontSize: wide ? 34 : 28,
-            height: 1.1,
-            color: theme.ink,
-          ),
-        ),
-        const SizedBox(height: 22),
-        if (wide)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(flex: 5, child: image),
-              const SizedBox(width: 28),
-              Expanded(
-                flex: 6,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: info,
-                ),
-              ),
-            ],
-          )
-        else ...[
-          image,
           const SizedBox(height: 22),
-          info,
+          if (wide)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 5, child: image),
+                const SizedBox(width: 28),
+                Expanded(
+                  flex: 7,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: info,
+                  ),
+                ),
+              ],
+            )
+          else ...[
+            image,
+            const SizedBox(height: 22),
+            info,
+          ],
         ],
-      ],
+      ),
     );
   }
 
@@ -388,63 +395,51 @@ class _EntryDetailDialog extends ConsumerWidget {
 
     final size = MediaQuery.sizeOf(context);
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 640, maxHeight: size.height * 0.9),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 8, 8, 8),
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: theme.inkMuted.withValues(alpha: 0.12),
-                ),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    entry?.name ?? 'Entry',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: theme.headingFont,
-                      fontSize: 20,
-                      color: theme.ink,
+      // Wide enough to keep the meta row on one line; only as tall as needed.
+      constraints: BoxConstraints(maxWidth: 840, maxHeight: size.height * 0.92),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Compact action bar (no title — the title lives in the card body).
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 6, 6, 0),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  if (entry != null) ...[
+                    IconButton(
+                      tooltip: 'Edit',
+                      icon: Icon(Icons.edit_outlined, color: theme.inkMuted),
+                      onPressed: () => showEntryForm(context, existing: entry),
                     ),
-                  ),
-                ),
-                if (entry != null) ...[
+                    IconButton(
+                      tooltip: 'Delete',
+                      icon: Icon(Icons.delete_outline, color: theme.inkMuted),
+                      onPressed: () => _confirmDelete(context, ref, entry),
+                    ),
+                  ],
                   IconButton(
-                    tooltip: 'Edit',
-                    icon: Icon(Icons.edit_outlined, color: theme.inkMuted),
-                    onPressed: () => showEntryForm(context, existing: entry),
-                  ),
-                  IconButton(
-                    tooltip: 'Delete',
-                    icon: Icon(Icons.delete_outline, color: theme.inkMuted),
-                    onPressed: () => _confirmDelete(context, ref, entry),
+                    icon: Icon(Icons.close, color: theme.inkMuted),
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
-                IconButton(
-                  icon: Icon(Icons.close, color: theme.inkMuted),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+              ),
             ),
-          ),
-          Flexible(
-            child: entriesAsync.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : entry == null
-                ? const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Text('Entry not found'),
-                  )
-                : _Detail(entry: entry, theme: theme, text: text),
-          ),
-        ],
+            if (entriesAsync.isLoading)
+              const Padding(
+                padding: EdgeInsets.all(40),
+                child: CircularProgressIndicator(),
+              )
+            else if (entry == null)
+              const Padding(
+                padding: EdgeInsets.all(40),
+                child: Text('Entry not found'),
+              )
+            else
+              _Detail(entry: entry, theme: theme, text: text),
+          ],
+        ),
       ),
     );
   }
