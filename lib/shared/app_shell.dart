@@ -206,28 +206,34 @@ class _SlidingTabBar extends StatefulWidget {
 
 class _SlidingTabBarState extends State<_SlidingTabBar> {
   final _stackKey = GlobalKey();
-  late List<GlobalKey> _tabKeys;
+  late List<GlobalKey> _labelKeys;
   double? _left;
   double? _width;
+  double? _top;
 
   @override
   void initState() {
     super.initState();
-    _tabKeys = List.generate(widget.destinations.length, (_) => GlobalKey());
+    _labelKeys = List.generate(widget.destinations.length, (_) => GlobalKey());
   }
 
   void _measure() {
     if (!mounted) return;
     final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
-    final tabBox =
-        _tabKeys[widget.activeIndex].currentContext?.findRenderObject()
+    // Measure the label text itself, so the underline matches the word width.
+    final labelBox =
+        _labelKeys[widget.activeIndex].currentContext?.findRenderObject()
             as RenderBox?;
-    if (stackBox == null || tabBox == null) return;
-    final origin = tabBox.localToGlobal(Offset.zero, ancestor: stackBox);
-    if (_left != origin.dx || _width != tabBox.size.width) {
+    if (stackBox == null || labelBox == null) return;
+    final origin = labelBox.localToGlobal(Offset.zero, ancestor: stackBox);
+    final left = origin.dx;
+    final width = labelBox.size.width;
+    final top = origin.dy + labelBox.size.height + 4; // 4px under the word
+    if (_left != left || _width != width || _top != top) {
       setState(() {
-        _left = origin.dx;
-        _width = tabBox.size.width;
+        _left = left;
+        _width = width;
+        _top = top;
       });
     }
   }
@@ -246,7 +252,7 @@ class _SlidingTabBarState extends State<_SlidingTabBar> {
           children: [
             for (var i = 0; i < widget.destinations.length; i++)
               _Tab(
-                key: _tabKeys[i],
+                labelKey: _labelKeys[i],
                 theme: t,
                 label: widget.destinations[i].label,
                 active: i == widget.activeIndex,
@@ -254,13 +260,13 @@ class _SlidingTabBarState extends State<_SlidingTabBar> {
               ),
           ],
         ),
-        if (_left != null && _width != null)
+        if (_left != null && _width != null && _top != null)
           AnimatedPositioned(
             duration: const Duration(milliseconds: 260),
             curve: Curves.easeInOutCubic,
             left: _left,
             width: _width,
-            bottom: 0,
+            top: _top,
             height: 2,
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -276,13 +282,14 @@ class _SlidingTabBarState extends State<_SlidingTabBar> {
 
 class _Tab extends StatelessWidget {
   const _Tab({
-    super.key,
+    required this.labelKey,
     required this.theme,
     required this.label,
     required this.active,
     required this.onTap,
   });
 
+  final Key labelKey;
   final AppTheme theme;
   final String label;
   final bool active;
@@ -303,7 +310,7 @@ class _Tab extends StatelessWidget {
             fontWeight: active ? FontWeight.w700 : FontWeight.w500,
             color: active ? theme.ink : theme.inkMuted,
           ),
-          child: Text(label),
+          child: Text(label, key: labelKey),
         ),
       ),
     );

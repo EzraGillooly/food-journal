@@ -17,20 +17,26 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('RatingControl reports the tapped value', (tester) async {
+  testWidgets('RatingControl half-star tap reports an odd value', (
+    tester,
+  ) async {
     int? picked;
     await tester.pumpWidget(
-      _host(RatingControl(value: picked, onChanged: (v) => picked = v)),
+      _host(RatingControl(value: null, onChanged: (v) => picked = v)),
     );
-    await tester.tap(find.text('7'));
+    // Right (full) zone of the 4th star = 8/10.
+    await tester.tap(find.byKey(const ValueKey('rate-8')));
+    expect(picked, 8);
+    // Left (half) zone of the 4th star = 7/10.
+    await tester.tap(find.byKey(const ValueKey('rate-7')));
     expect(picked, 7);
   });
 
-  testWidgets('RatingControl renders all ten chips', (tester) async {
-    await tester.pumpWidget(_host(RatingControl(value: 5, onChanged: (_) {})));
-    for (var n = 1; n <= 10; n++) {
-      expect(find.text('$n'), findsOneWidget);
-    }
+  testWidgets('RatingControl renders five stars', (tester) async {
+    await tester.pumpWidget(_host(RatingControl(value: 9, onChanged: (_) {})));
+    // 9/10 = four full stars + one half star.
+    expect(find.byIcon(Icons.star_rounded), findsNWidgets(4));
+    expect(find.byIcon(Icons.star_half_rounded), findsOneWidget);
   });
 
   testWidgets('MadeBoughtToggle flips selection', (tester) async {

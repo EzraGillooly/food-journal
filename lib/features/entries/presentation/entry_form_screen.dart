@@ -13,7 +13,9 @@ import '../../../shared/selectable_chip.dart';
 import '../application/entries_controller.dart';
 import '../data/food_category.dart';
 import '../data/food_entry.dart';
+import '../data/photo_cropper.dart';
 import '../data/photo_picker.dart';
+import 'widgets/entry_card.dart';
 import 'widgets/entry_photo.dart';
 
 /// Route wrapper for editing: looks up the entry by id from the loaded list and
@@ -123,8 +125,10 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
   }
 
   Future<void> _pickPhoto(ImageSource source) async {
-    final bytes = await ref.read(photoPickerProvider).pick(source);
-    if (bytes != null) setState(() => _photoBytes = bytes);
+    final file = await ref.read(photoPickerProvider).pick(source);
+    if (file == null || !mounted) return;
+    final bytes = await cropPhotoToCard(context, file.path);
+    if (bytes != null && mounted) setState(() => _photoBytes = bytes);
   }
 
   Future<void> _pickDateTime() async {
@@ -155,7 +159,7 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
     setState(() => _error = null);
     if (!_formKey.currentState!.validate()) return;
     if (_rating == null) {
-      setState(() => _error = 'Give it a rating from 1 to 10.');
+      setState(() => _error = 'Tap the stars to rate it.');
       return;
     }
     setState(() => _saving = true);
@@ -222,6 +226,18 @@ class _EntryFormScreenState extends ConsumerState<EntryFormScreen> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                _label(text, 'Card preview'),
+                const SizedBox(height: 10),
+                _CardPreview(
+                  name: _name,
+                  rating: _rating,
+                  category: _category,
+                  isHomemade: _homemade,
+                  eatenAt: _eatenAt,
+                  photoBytes: _photoBytes,
+                  existingPhotoPath: widget.existing?.photoPath,
+                ),
+                const SizedBox(height: 24),
                 _PhotoField(
                   bytes: _photoBytes,
                   existingPhotoPath: widget.existing?.photoPath,
@@ -492,6 +508,53 @@ class _DateTimeField extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Live preview of how this entry's card will look, using the current form
+/// values. Listens to the name field so it updates as the user types.
+class _CardPreview extends StatelessWidget {
+  const _CardPreview({
+    required this.name,
+    required this.rating,
+    required this.category,
+    required this.isHomemade,
+    required this.eatenAt,
+    required this.photoBytes,
+    required this.existingPhotoPath,
+  });
+
+  final TextEditingController name;
+  final int? rating;
+  final FoodCategory category;
+  final bool isHomemade;
+  final DateTime eatenAt;
+  final Uint8List? photoBytes;
+  final String? existingPhotoPath;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: name,
+      builder: (context, _) {
+        final entry = FoodEntry(
+          name: name.text.trim().isEmpty ? 'Your dish' : name.text.trim(),
+          rating: rating ?? 0,
+          category: category,
+          isHomemade: isHomemade,
+          photoPath: photoBytes == null ? existingPhotoPath : null,
+          eatenAt: eatenAt,
+        );
+        return IgnorePointer(
+          child: EntryCard(
+            entry: entry,
+            photoOverride: photoBytes != null
+                ? Image.memory(photoBytes!, fit: BoxFit.cover)
+                : null,
+          ),
+        );
+      },
     );
   }
 }

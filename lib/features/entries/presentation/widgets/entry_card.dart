@@ -10,10 +10,19 @@ import 'entry_photo.dart';
 
 /// A single entry in the feed: photo hero, name, category, made/bought, rating.
 class EntryCard extends ConsumerWidget {
-  const EntryCard({super.key, required this.entry, this.onTap});
+  const EntryCard({
+    super.key,
+    required this.entry,
+    this.onTap,
+    this.photoOverride,
+  });
 
   final FoodEntry entry;
   final VoidCallback? onTap;
+
+  /// When set, shows this instead of loading the stored photo (used by the
+  /// live card preview in the entry form).
+  final Widget? photoOverride;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,7 +38,7 @@ class EntryCard extends ConsumerWidget {
           children: [
             AspectRatio(
               aspectRatio: 16 / 10,
-              child: EntryPhoto(photoPath: entry.photoPath),
+              child: photoOverride ?? EntryPhoto(photoPath: entry.photoPath),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
