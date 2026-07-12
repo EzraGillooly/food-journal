@@ -32,25 +32,28 @@ class InsightsScreen extends ConsumerWidget {
         final stats = JournalStats(entries);
         return ContentColumn(
           maxWidth: 760,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _label(theme, 'On this day'),
-              const SizedBox(height: 12),
-              _OnThisDay(entries: stats.onThisDay),
-              const SizedBox(height: 30),
-              _label(theme, 'Your logging streak'),
-              const SizedBox(height: 14),
-              _Streak(stats: stats),
-              const SizedBox(height: 30),
-              _label(theme, 'All time'),
-              const SizedBox(height: 14),
-              _Kpis(stats: stats),
-              const SizedBox(height: 30),
-              _label(theme, 'Breakdown'),
-              const SizedBox(height: 14),
-              _Charts(stats: stats),
-            ],
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _label(theme, 'On this day'),
+                const SizedBox(height: 12),
+                _OnThisDay(entries: stats.onThisDay),
+                const SizedBox(height: 30),
+                _label(theme, 'Your logging streak'),
+                const SizedBox(height: 14),
+                _Streak(stats: stats),
+                const SizedBox(height: 30),
+                _label(theme, 'All time'),
+                const SizedBox(height: 14),
+                _Kpis(stats: stats),
+                const SizedBox(height: 30),
+                _label(theme, 'Breakdown'),
+                const SizedBox(height: 14),
+                _Charts(stats: stats),
+              ],
+            ),
           ),
         );
       },
