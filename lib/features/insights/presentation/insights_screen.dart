@@ -32,8 +32,9 @@ class InsightsScreen extends ConsumerWidget {
         final stats = JournalStats(entries);
         return ContentColumn(
           maxWidth: 760,
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 120),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
           child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

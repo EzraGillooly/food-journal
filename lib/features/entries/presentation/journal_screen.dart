@@ -42,9 +42,13 @@ class JournalScreen extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () =>
               ref.read(entriesControllerProvider.notifier).refresh(),
+          // Horizontal + top padding only; the bottom gap lives inside the
+          // scroll view (as a trailing sliver) so content scrolls to the
+          // physical bottom instead of being clipped by an outer pad. This
+          // mirrors the home page and avoids a "footer blocking content" look.
           child: ContentColumn(
-            maxWidth: 680,
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 120),
+            maxWidth: 760,
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
@@ -59,6 +63,7 @@ class JournalScreen extends ConsumerWidget {
                   )
                 else
                   _Timeline(groups: _groupByDay(filtered)),
+                const SliverToBoxAdapter(child: SizedBox(height: 120)),
               ],
             ),
           ),

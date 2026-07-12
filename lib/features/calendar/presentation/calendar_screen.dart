@@ -127,8 +127,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         }
         return ContentColumn(
           maxWidth: 820,
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+          // Bottom gap lives inside the scroll view (like the home page) so
+          // content scrolls to the physical bottom rather than being clipped by
+          // an outer pad, which reads as a footer blocking the last rows.
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
           child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 120),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -402,6 +406,9 @@ class _MonthGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 6,
       crossAxisSpacing: 6,
+      // Wider-than-tall cells keep the whole month compact so the day detail
+      // below stays close to the fold instead of being pushed off-screen.
+      childAspectRatio: 1.35,
       children: cells,
     );
   }
