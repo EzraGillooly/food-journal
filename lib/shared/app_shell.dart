@@ -125,17 +125,25 @@ class _TopBar extends ConsumerWidget implements PreferredSizeWidget {
                         color: theme.ink,
                       ),
                     ),
-                    if (wide) ...[
-                      const SizedBox(width: 36),
-                      for (final d in _destinations)
-                        _NavLink(
-                          theme: theme,
-                          label: d.label,
-                          active: _isActive(d.path),
-                          onTap: () => context.go(d.path),
+                    if (wide)
+                      Expanded(
+                        child: Center(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (final d in _destinations)
+                                _NavLink(
+                                  theme: theme,
+                                  label: d.label,
+                                  active: _isActive(d.path),
+                                  onTap: () => context.go(d.path),
+                                ),
+                            ],
+                          ),
                         ),
-                    ],
-                    const Spacer(),
+                      )
+                    else
+                      const Spacer(),
                     IconButton(
                       tooltip: 'Settings',
                       icon: Icon(Icons.palette_outlined, color: theme.inkMuted),
@@ -179,7 +187,7 @@ class _NavLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(right: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(6),

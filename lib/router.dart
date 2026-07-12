@@ -59,14 +59,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => AppShell(child: child),
         routes: [
-          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+          GoRoute(
+            path: '/',
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: HomeScreen()),
+          ),
           GoRoute(
             path: '/journal',
-            builder: (context, state) => const JournalScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: JournalScreen()),
           ),
           GoRoute(
             path: '/insights',
-            builder: (context, state) => const InsightsScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: InsightsScreen()),
           ),
         ],
       ),
