@@ -80,18 +80,20 @@ class EntryCard extends ConsumerWidget {
                         ),
                       ],
                       const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Flexible(
-                            child: CategoryTag(category: entry.category),
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: MadeBoughtLabel(
-                              isHomemade: entry.isHomemade,
-                            ),
-                          ),
-                        ],
+                      // Scale the tag + made/bought down to fit rather than
+                      // overflow when the card is narrow (e.g. the live preview
+                      // in the entry form). Keeps a single line so the fixed
+                      // card height is never exceeded.
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          children: [
+                            CategoryTag(category: entry.category),
+                            const SizedBox(width: 8),
+                            MadeBoughtLabel(isHomemade: entry.isHomemade),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 6),
                       Text(

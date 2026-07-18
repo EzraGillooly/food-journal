@@ -419,36 +419,50 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
           ),
         ),
         const SizedBox(height: 16),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Column(
+        // Rating + calories sit side by side when there's room, but the 5-star
+        // control has a fixed minimum width, so on a narrow (phone) column they
+        // stack instead of overflowing.
+        LayoutBuilder(
+          builder: (context, c) {
+            final rating = Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _label(theme, 'Rating'),
+                const SizedBox(height: 4),
+                RatingControl(
+                  value: active.rating,
+                  onChanged: (v) => setState(() => active.rating = v),
+                ),
+              ],
+            );
+            final calories = TextField(
+              controller: active.calories,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'Calories',
+                suffixText: 'kcal',
+                isDense: true,
+              ),
+            );
+            if (c.maxWidth < 360) {
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _label(theme, 'Rating'),
-                  const SizedBox(height: 4),
-                  RatingControl(
-                    value: active.rating,
-                    onChanged: (v) => setState(() => active.rating = v),
-                  ),
+                  rating,
+                  const SizedBox(height: 14),
+                  calories,
                 ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            SizedBox(
-              width: 110,
-              child: TextField(
-                controller: active.calories,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Calories',
-                  suffixText: 'kcal',
-                  isDense: true,
-                ),
-              ),
-            ),
-          ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(child: rating),
+                const SizedBox(width: 12),
+                SizedBox(width: 110, child: calories),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 14),
         _BulletBar(theme: theme, controller: active.notes),

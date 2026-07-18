@@ -792,23 +792,27 @@ class _DayEntryTile extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 7),
-                    Row(
-                      children: [
-                        CategoryTag(category: entry.category),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: MadeBoughtLabel(isHomemade: entry.isHomemade),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          formatEntryTime(entry.eatenAt),
-                          style: TextStyle(
-                            fontFamily: theme.bodyFont,
-                            fontSize: 11.5,
-                            color: theme.inkMuted,
+                    // Scale the meta line down to fit narrow (phone) tiles
+                    // instead of overflowing; stays a single line.
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: [
+                          CategoryTag(category: entry.category),
+                          const SizedBox(width: 8),
+                          MadeBoughtLabel(isHomemade: entry.isHomemade),
+                          const SizedBox(width: 8),
+                          Text(
+                            formatEntryTime(entry.eatenAt),
+                            style: TextStyle(
+                              fontFamily: theme.bodyFont,
+                              fontSize: 11.5,
+                              color: theme.inkMuted,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
