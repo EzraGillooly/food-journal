@@ -155,41 +155,57 @@ class _DetailState extends State<_Detail> {
       ),
     );
 
+    final date = Text(
+      formatEntryDate(entry.eatenAt),
+      style: TextStyle(
+        fontFamily: theme.bodyFont,
+        fontSize: 12.5,
+        color: theme.inkMuted,
+      ),
+    );
+    final stars = RatingStars(rating: dish.rating, size: 18);
+    final category = CategoryTag(category: entry.category);
+    final kcal = dish.calories == null
+        ? null
+        : Text(
+            '${dish.calories} kcal',
+            style: TextStyle(
+              fontFamily: theme.bodyFont,
+              fontSize: 12.5,
+              color: theme.inkMuted,
+            ),
+          );
+    final madeBought = MadeBoughtLabel(isHomemade: entry.isHomemade);
+
+    // date · rating · category · [kcal] .......... made / bought.
+    // On wide screens made/bought is pushed to the far right; on phones the
+    // whole line wraps so nothing overflows.
+    final meta = wide
+        ? Row(
+            children: [
+              date,
+              const SizedBox(width: 10),
+              stars,
+              const SizedBox(width: 10),
+              category,
+              if (kcal != null) ...[const SizedBox(width: 10), kcal],
+              const Spacer(),
+              const SizedBox(width: 8),
+              madeBought,
+            ],
+          )
+        : Wrap(
+            spacing: 12,
+            runSpacing: 10,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [date, stars, category, ?kcal, madeBought],
+          );
+
     final info = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // date · rating (stars) · category .......... made / bought
-        Row(
-          children: [
-            Text(
-              formatEntryDate(entry.eatenAt),
-              style: TextStyle(
-                fontFamily: theme.bodyFont,
-                fontSize: 12.5,
-                color: theme.inkMuted,
-              ),
-            ),
-            const SizedBox(width: 10),
-            RatingStars(rating: dish.rating, size: 18),
-            const SizedBox(width: 10),
-            CategoryTag(category: entry.category),
-            if (dish.calories != null) ...[
-              const SizedBox(width: 10),
-              Text(
-                '${dish.calories} kcal',
-                style: TextStyle(
-                  fontFamily: theme.bodyFont,
-                  fontSize: 12.5,
-                  color: theme.inkMuted,
-                ),
-              ),
-            ],
-            const Spacer(),
-            const SizedBox(width: 8),
-            MadeBoughtLabel(isHomemade: entry.isHomemade),
-          ],
-        ),
+        meta,
         if (dish.notes != null && dish.notes!.isNotEmpty)
           _section(theme, 'Notes', dish.notes!),
         if (dish.recipe != null && dish.recipe!.isNotEmpty)
@@ -263,8 +279,11 @@ class _DetailState extends State<_Detail> {
     );
   }
 
-  /// Title centered, with the popup's actions inline on the right. An invisible
-  /// copy of the actions on the left keeps the title visually centered.
+  /// Title with the popup's actions. On wide screens the title is centered with
+  /// the actions inline on the right (an invisible mirror on the left keeps it
+  /// centered). On phones there isn't room for two action rows beside the
+  /// title - that squished it to one letter per line - so the actions sit on
+  /// their own right-aligned row above a full-width title.
   Widget _titleHeader(AppTheme theme, String title, bool wide) {
     final titleText = Text(
       title,
@@ -279,6 +298,16 @@ class _DetailState extends State<_Detail> {
     final actions = widget.actions;
     if (actions == null || actions.isEmpty) return titleText;
     final actionRow = Row(mainAxisSize: MainAxisSize.min, children: actions);
+    if (!wide) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Align(alignment: Alignment.centerRight, child: actionRow),
+          const SizedBox(height: 4),
+          titleText,
+        ],
+      );
+    }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [

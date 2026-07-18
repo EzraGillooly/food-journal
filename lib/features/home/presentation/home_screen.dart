@@ -190,25 +190,45 @@ class _WeekLine extends ConsumerWidget {
         ? 0.0
         : weekly.fold<int>(0, (a, e) => a + e.rating) / week;
     final summary = week == 0
-        ? 'No entries yet this week'
+        ? 'No entries yet'
         : '$week entries · avg ${weekAvg.toStringAsFixed(1)} · '
               '$made made / ${week - made} bought';
-    return Row(
-      children: [
-        _Label('This week'),
-        const Spacer(),
-        Flexible(
-          child: Text(
-            summary,
-            textAlign: TextAlign.end,
-            style: TextStyle(
-              fontFamily: theme.bodyFont,
-              fontSize: 12.5,
-              color: theme.inkMuted,
+    final summaryText = Text(
+      summary,
+      style: TextStyle(
+        fontFamily: theme.bodyFont,
+        fontSize: 12.5,
+        color: theme.inkMuted,
+      ),
+    );
+    // On phones the label + stats don't fit on one line, so stack them; on
+    // wider layouts keep the label left / stats right.
+    return LayoutBuilder(
+      builder: (context, c) {
+        if (c.maxWidth < 480) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [_Label('This week'), const SizedBox(height: 4), summaryText],
+          );
+        }
+        return Row(
+          children: [
+            _Label('This week'),
+            const Spacer(),
+            Flexible(
+              child: Text(
+                summary,
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                  fontFamily: theme.bodyFont,
+                  fontSize: 12.5,
+                  color: theme.inkMuted,
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

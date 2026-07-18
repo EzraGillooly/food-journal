@@ -23,33 +23,51 @@ class AuthScaffold extends ConsumerWidget {
     final text = Theme.of(context).textTheme;
 
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 380),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Icon(Icons.restaurant_menu, size: 40, color: theme.primary),
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: text.headlineMedium,
-                  textAlign: TextAlign.center,
+      // LayoutBuilder + minHeight-constrained scroll view: the card is centered
+      // when there's room and scrolls (never overflows) when the viewport is
+      // short - e.g. a small phone or with the keyboard open.
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight - 48,
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  subtitle,
-                  style: text.bodySmall,
-                  textAlign: TextAlign.center,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 380),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Icon(
+                          Icons.restaurant_menu,
+                          size: 40,
+                          color: theme.primary,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          title,
+                          style: text.headlineMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          subtitle,
+                          style: text.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 28),
+                        ...children,
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 28),
-                ...children,
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
