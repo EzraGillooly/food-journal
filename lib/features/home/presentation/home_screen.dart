@@ -49,11 +49,7 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     _Cover(entry: featured, wide: wide),
                     Padding(
-                      padding: EdgeInsets.fromLTRB(wide ? 4 : 16, 28, 16, 0),
-                      child: _WeekLine(stats: stats),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(wide ? 4 : 16, 26, 16, 14),
+                      padding: EdgeInsets.fromLTRB(wide ? 4 : 16, 28, 16, 14),
                       child: _SectionHeader(
                         label: 'Lately',
                         onSeeAll: () => context.go('/journal'),
@@ -169,66 +165,6 @@ class _Cover extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _WeekLine extends ConsumerWidget {
-  const _WeekLine({required this.stats});
-
-  final JournalStats stats;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = ref.watch(themeControllerProvider);
-    final weekly = stats.thisWeek;
-    final week = weekly.length;
-    final made = weekly.where((e) => e.isHomemade).length;
-    // Average over this week's entries (not all time), so the line is
-    // internally consistent - "0 entries" never sits next to a stale average.
-    final weekAvg = week == 0
-        ? 0.0
-        : weekly.fold<int>(0, (a, e) => a + e.rating) / week;
-    final summary = week == 0
-        ? 'No entries yet'
-        : '$week entries · avg ${weekAvg.toStringAsFixed(1)} · '
-              '$made made / ${week - made} bought';
-    final summaryText = Text(
-      summary,
-      style: TextStyle(
-        fontFamily: theme.bodyFont,
-        fontSize: 12.5,
-        color: theme.inkMuted,
-      ),
-    );
-    // On phones the label + stats don't fit on one line, so stack them; on
-    // wider layouts keep the label left / stats right.
-    return LayoutBuilder(
-      builder: (context, c) {
-        if (c.maxWidth < 480) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [_Label('This week'), const SizedBox(height: 4), summaryText],
-          );
-        }
-        return Row(
-          children: [
-            _Label('This week'),
-            const Spacer(),
-            Flexible(
-              child: Text(
-                summary,
-                textAlign: TextAlign.end,
-                style: TextStyle(
-                  fontFamily: theme.bodyFont,
-                  fontSize: 12.5,
-                  color: theme.inkMuted,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }
