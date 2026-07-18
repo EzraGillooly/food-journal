@@ -40,33 +40,42 @@ class JournalScreen extends ConsumerWidget {
         }
         final filter = ref.watch(feedFilterProvider);
         final filtered = entries.where(filter.matches).toList(growable: false);
-        return RefreshIndicator(
-          onRefresh: () =>
-              ref.read(entriesControllerProvider.notifier).refresh(),
-          // Horizontal + top padding only; the bottom gap lives inside the
-          // scroll view (as a trailing sliver) so content scrolls to the
-          // physical bottom instead of being clipped by an outer pad. This
-          // mirrors the home page and avoids a "footer blocking content" look.
-          child: ContentColumn(
-            maxWidth: 760,
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                const SliverToBoxAdapter(child: FeedFilterBar()),
-                if (filtered.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _NoMatches(
-                      onClear: () =>
-                          ref.read(feedFilterProvider.notifier).clear(),
-                    ),
-                  )
-                else
-                  _Timeline(groups: _groupByDay(filtered)),
-                const SliverToBoxAdapter(child: SizedBox(height: 120)),
-              ],
-            ),
+        // The search/filter bar is a fixed row above the scrolling timeline (not
+        // a sliver), so it stays put on its opaque background while the timeline
+        // scrolls beneath it - the timeline never disappears under the nav
+        // header's edge, and there's no pinned-header/RefreshIndicator conflict.
+        return ContentColumn(
+          maxWidth: 760,
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 16, bottom: 12),
+                child: FeedFilterBar(),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () =>
+                      ref.read(entriesControllerProvider.notifier).refresh(),
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      if (filtered.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _NoMatches(
+                            onClear: () =>
+                                ref.read(feedFilterProvider.notifier).clear(),
+                          ),
+                        )
+                      else
+                        _Timeline(groups: _groupByDay(filtered)),
+                      const SliverToBoxAdapter(child: SizedBox(height: 120)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
