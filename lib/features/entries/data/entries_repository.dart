@@ -117,7 +117,9 @@ class EntriesRepository {
     final id = entry.id;
     if (id == null) return;
     await _client.from('food_entries').delete().eq('id', id);
-    if (entry.photoPath != null) {
+    // Only Storage-backed photos need removing; seeded/demo entries hold an
+    // external URL that we don't own.
+    if (entry.photoPath != null && !isExternalPhotoUrl(entry.photoPath!)) {
       await _client.storage.from(_photoBucket).remove([entry.photoPath!]);
     }
   }
@@ -127,8 +129,16 @@ final entriesRepositoryProvider = Provider<EntriesRepository>((ref) {
   return EntriesRepository(ref.watch(supabaseClientProvider));
 });
 
+/// Whether [path] is an absolute image URL rather than a Storage object path.
+/// Seeded/demo entries store a ready-to-use URL; real uploads store a private
+/// Storage path that must be signed.
+bool isExternalPhotoUrl(String path) =>
+    path.startsWith('http://') || path.startsWith('https://');
+
 /// Signed URL for a stored photo path, cached per path. Invalidate this for a
-/// path after replacing that photo so viewers re-fetch a fresh URL.
+/// path after replacing that photo so viewers re-fetch a fresh URL. Absolute
+/// URLs (seeded/demo photos) are returned as-is, with no Storage round-trip.
 final photoUrlProvider = FutureProvider.family<String, String>((ref, path) {
+  if (isExternalPhotoUrl(path)) return Future.value(path);
   return ref.watch(entriesRepositoryProvider).photoUrl(path);
 });
