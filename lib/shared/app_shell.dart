@@ -45,13 +45,23 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       appBar: _TopBar(theme: theme, wide: wide, location: location),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showEntryForm(context),
-        backgroundColor: theme.primary,
-        foregroundColor: theme.onPrimary,
-        icon: const Icon(Icons.add),
-        label: const Text('Add entry'),
-      ),
+      // A compact icon FAB on phones (the extended pill covered card content);
+      // the roomier labelled button on wide layouts.
+      floatingActionButton: wide
+          ? FloatingActionButton.extended(
+              onPressed: () => showEntryForm(context),
+              backgroundColor: theme.primary,
+              foregroundColor: theme.onPrimary,
+              icon: const Icon(Icons.add),
+              label: const Text('Add entry'),
+            )
+          : FloatingActionButton(
+              onPressed: () => showEntryForm(context),
+              backgroundColor: theme.primary,
+              foregroundColor: theme.onPrimary,
+              tooltip: 'Add entry',
+              child: const Icon(Icons.add),
+            ),
       bottomNavigationBar: wide
           ? null
           : NavigationBar(

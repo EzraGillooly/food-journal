@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/rating_stars.dart';
+import '../../../shared/skeleton.dart';
 import '../../entries/application/entries_controller.dart';
 import '../../entries/application/journal_stats.dart';
 import '../../entries/data/food_entry.dart';
@@ -21,7 +22,7 @@ class HomeScreen extends ConsumerWidget {
     final entriesAsync = ref.watch(entriesControllerProvider);
 
     return entriesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonFeed(maxWidth: kContentMaxWidth),
       error: (e, _) => const _HomeMessage(
         title: "Couldn't load your journal",
         body: 'Check your connection and try again.',
@@ -180,19 +181,31 @@ class _WeekLine extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeControllerProvider);
-    final week = stats.thisWeek.length;
-    final made = stats.thisWeek.where((e) => e.isHomemade).length;
+    final weekly = stats.thisWeek;
+    final week = weekly.length;
+    final made = weekly.where((e) => e.isHomemade).length;
+    // Average over this week's entries (not all time), so the line is
+    // internally consistent - "0 entries" never sits next to a stale average.
+    final weekAvg = week == 0
+        ? 0.0
+        : weekly.fold<int>(0, (a, e) => a + e.rating) / week;
+    final summary = week == 0
+        ? 'No entries yet this week'
+        : '$week entries · avg ${weekAvg.toStringAsFixed(1)} · '
+              '$made made / ${week - made} bought';
     return Row(
       children: [
         _Label('This week'),
         const Spacer(),
-        Text(
-          '$week entries · avg ${stats.avgRating.toStringAsFixed(1)} · '
-          '$made made / ${week - made} bought',
-          style: TextStyle(
-            fontFamily: theme.bodyFont,
-            fontSize: 12.5,
-            color: theme.inkMuted,
+        Flexible(
+          child: Text(
+            summary,
+            textAlign: TextAlign.end,
+            style: TextStyle(
+              fontFamily: theme.bodyFont,
+              fontSize: 12.5,
+              color: theme.inkMuted,
+            ),
           ),
         ),
       ],

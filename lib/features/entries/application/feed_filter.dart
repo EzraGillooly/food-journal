@@ -42,8 +42,19 @@ class FeedFilter {
     if (source == MadeBoughtFilter.made && !e.isHomemade) return false;
     if (source == MadeBoughtFilter.bought && e.isHomemade) return false;
     final q = query.trim().toLowerCase();
-    if (q.isNotEmpty && !e.name.toLowerCase().contains(q)) return false;
+    if (q.isNotEmpty && !_haystack(e).contains(q)) return false;
     return true;
+  }
+
+  /// All searchable text for an entry: every dish's name/notes/recipe, plus the
+  /// location and category label, so search isn't limited to the dish name.
+  String _haystack(FoodEntry e) {
+    final parts = <String?>[
+      for (final d in e.dishes) ...[d.name, d.notes, d.recipe],
+      e.location,
+      e.category.label,
+    ];
+    return parts.whereType<String>().join(' ').toLowerCase();
   }
 }
 

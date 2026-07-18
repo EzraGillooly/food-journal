@@ -51,7 +51,7 @@ class _FeedFilterBarState extends ConsumerState<FeedFilterBar> {
             controller: _search,
             onChanged: ctrl.setQuery,
             decoration: InputDecoration(
-              hintText: 'Search by name',
+              hintText: 'Search name, notes, place',
               prefixIcon: Icon(Icons.search, color: theme.inkMuted),
               suffixIcon: filter.query.isEmpty
                   ? null

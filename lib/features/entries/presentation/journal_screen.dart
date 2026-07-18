@@ -5,6 +5,7 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/utils/date_format.dart';
 import '../../../shared/app_shell.dart';
 import '../../../shared/category_tag.dart';
+import '../../../shared/skeleton.dart';
 import '../../../shared/made_bought_label.dart';
 import '../../../shared/rating_stars.dart';
 import '../application/entries_controller.dart';
@@ -24,7 +25,7 @@ class JournalScreen extends ConsumerWidget {
     final entriesAsync = ref.watch(entriesControllerProvider);
 
     return entriesAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const SkeletonFeed(maxWidth: 760),
       error: (e, _) => _Message(
         title: "Couldn't load your journal",
         action: 'Retry',
