@@ -49,15 +49,20 @@ class HomeScreen extends ConsumerWidget {
                   children: [
                     _Cover(entry: featured, wide: wide),
                     Padding(
-                      padding: EdgeInsets.fromLTRB(wide ? 4 : 16, 28, 16, 14),
+                      padding: EdgeInsets.fromLTRB(
+                        wide ? 0 : 16,
+                        28,
+                        wide ? 0 : 16,
+                        14,
+                      ),
                       child: _SectionHeader(
                         label: 'Lately',
                         onSeeAll: () => context.go('/journal'),
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: wide ? 4 : 16),
-                      child: _LatelyGrid(entries: lately, maxWidth: c.maxWidth),
+                      padding: EdgeInsets.symmetric(horizontal: wide ? 0 : 16),
+                      child: _LatelyGrid(entries: lately),
                     ),
                   ],
                 ),
@@ -208,30 +213,36 @@ class _Label extends ConsumerWidget {
 }
 
 class _LatelyGrid extends StatelessWidget {
-  const _LatelyGrid({required this.entries, required this.maxWidth});
+  const _LatelyGrid({required this.entries});
 
   final List<FoodEntry> entries;
-  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
     const gap = 16.0;
-    // Horizontal cards are wide, so at most two across.
-    final cols = maxWidth >= 720 ? 2 : 1;
-    final cardW = (maxWidth - 16 * 2 - gap * (cols - 1)) / cols;
-    return Wrap(
-      spacing: gap,
-      runSpacing: 4,
-      children: [
-        for (final e in entries)
-          SizedBox(
-            width: cols == 1 ? double.infinity : cardW,
-            child: EntryCard(
-              entry: e,
-              onTap: () => showEntryDetail(context, e.id!),
-            ),
-          ),
-      ],
+    // Size cards from the actual available width so the two columns fill it
+    // exactly (flush with the cover above) instead of leaving a right gap.
+    return LayoutBuilder(
+      builder: (context, c) {
+        // Horizontal cards are wide, so at most two across.
+        final cols = c.maxWidth >= 720 ? 2 : 1;
+        // Subtract a hair so sub-pixel rounding can't push a card to a new row.
+        final cardW = (c.maxWidth - gap * (cols - 1)) / cols - 0.5;
+        return Wrap(
+          spacing: gap,
+          runSpacing: 4,
+          children: [
+            for (final e in entries)
+              SizedBox(
+                width: cols == 1 ? double.infinity : cardW,
+                child: EntryCard(
+                  entry: e,
+                  onTap: () => showEntryDetail(context, e.id!),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

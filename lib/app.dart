@@ -17,6 +17,19 @@ class FoodJournalApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: theme.toThemeData(),
       routerConfig: router,
+      // Hide the always-on web scrollbar for a cleaner, app-like look;
+      // scrolling by wheel/trackpad/touch still works.
+      scrollBehavior: _NoScrollbarBehavior(),
     );
   }
+}
+
+/// Removes the scrollbar overlay that the web/desktop scroll behavior adds.
+class _NoScrollbarBehavior extends MaterialScrollBehavior {
+  @override
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) => child;
 }
