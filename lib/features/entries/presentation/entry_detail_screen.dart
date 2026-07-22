@@ -279,15 +279,11 @@ class _DetailState extends State<_Detail> {
     );
   }
 
-  /// Title with the popup's actions. On wide screens the title is centered with
-  /// the actions inline on the right (an invisible mirror on the left keeps it
-  /// centered). On phones there isn't room for two action rows beside the
-  /// title - that squished it to one letter per line - so the actions sit on
-  /// their own right-aligned row above a full-width title.
+  /// Title on the left with the popup's actions (edit / delete / close) inline
+  /// on the right, on both phone and desktop.
   Widget _titleHeader(AppTheme theme, String title, bool wide) {
     final titleText = Text(
       title,
-      textAlign: TextAlign.center,
       style: TextStyle(
         fontFamily: theme.headingFont,
         fontSize: wide ? 34 : 28,
@@ -296,24 +292,15 @@ class _DetailState extends State<_Detail> {
       ),
     );
     final actions = widget.actions;
-    if (actions == null || actions.isEmpty) return titleText;
-    final actionRow = Row(mainAxisSize: MainAxisSize.min, children: actions);
-    if (!wide) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Align(alignment: Alignment.centerRight, child: actionRow),
-          const SizedBox(height: 4),
-          titleText,
-        ],
-      );
+    if (actions == null || actions.isEmpty) {
+      return Align(alignment: Alignment.centerLeft, child: titleText);
     }
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        IgnorePointer(child: Opacity(opacity: 0, child: actionRow)),
         Expanded(child: titleText),
-        actionRow,
+        const SizedBox(width: 8),
+        Row(mainAxisSize: MainAxisSize.min, children: actions),
       ],
     );
   }

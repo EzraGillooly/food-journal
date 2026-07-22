@@ -159,7 +159,12 @@ class _TimelineTile extends ConsumerWidget {
                 child: SizedBox(
                   width: 76,
                   height: 60,
-                  child: EntryPhoto(photoPath: entry.photoPath),
+                  child: EntryPhoto(
+                    photoPath: entry.photoPath,
+                    focusX: entry.photoFocusX,
+                    focusY: entry.photoFocusY,
+                    zoom: entry.photoZoom,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),

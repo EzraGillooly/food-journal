@@ -43,7 +43,14 @@ class EntryCard extends ConsumerWidget {
             children: [
               SizedBox(
                 width: 116,
-                child: photoOverride ?? EntryPhoto(photoPath: entry.photoPath),
+                child:
+                    photoOverride ??
+                    EntryPhoto(
+                      photoPath: entry.photoPath,
+                      focusX: entry.photoFocusX,
+                      focusY: entry.photoFocusY,
+                      zoom: entry.photoZoom,
+                    ),
               ),
               Expanded(
                 child: Padding(

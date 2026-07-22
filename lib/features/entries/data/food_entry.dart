@@ -2,8 +2,8 @@ import 'dish.dart';
 import 'food_category.dart';
 
 /// A single food-journal entry. Mirrors the `food_entries` table (migrations
-/// 0001 + 0003). [id]/[userId]/[createdAt] are assigned by Postgres on insert,
-/// so they are nullable on a not-yet-saved draft.
+/// 0001 + 0003 + 0005). [id]/[userId]/[createdAt] are assigned by Postgres on
+/// insert, so they are nullable on a not-yet-saved draft.
 ///
 /// An entry holds one or more [dishes] (one photo, possibly several dishes).
 /// The legacy `name`/`rating`/`notes`/`recipe` columns mirror the primary dish
@@ -17,6 +17,9 @@ class FoodEntry {
     required this.isHomemade,
     this.location,
     this.photoPath,
+    this.photoFocusX = 0,
+    this.photoFocusY = 0,
+    this.photoZoom = 1,
     required this.eatenAt,
     this.createdAt,
   }) : assert(dishes.length > 0, 'an entry needs at least one dish');
@@ -28,6 +31,14 @@ class FoodEntry {
   final bool isHomemade;
   final String? location;
   final String? photoPath;
+
+  /// How the photo is framed in the small card thumbnails. [photoFocusX] /
+  /// [photoFocusY] align the visible window in [-1, 1] (0,0 = centered) and
+  /// [photoZoom] scales relative to a "cover" fill (1 = cover).
+  final double photoFocusX;
+  final double photoFocusY;
+  final double photoZoom;
+
   final DateTime eatenAt;
   final DateTime? createdAt;
 
@@ -63,6 +74,9 @@ class FoodEntry {
       isHomemade: map['is_homemade'] as bool,
       location: map['location'] as String?,
       photoPath: map['photo_path'] as String?,
+      photoFocusX: (map['photo_focus_x'] as num?)?.toDouble() ?? 0,
+      photoFocusY: (map['photo_focus_y'] as num?)?.toDouble() ?? 0,
+      photoZoom: (map['photo_zoom'] as num?)?.toDouble() ?? 1,
       eatenAt: DateTime.parse(map['eaten_at'] as String),
       createdAt: map['created_at'] == null
           ? null
@@ -84,6 +98,9 @@ class FoodEntry {
       'is_homemade': isHomemade,
       'location': Dish.clean(location),
       'photo_path': photoPath,
+      'photo_focus_x': photoFocusX,
+      'photo_focus_y': photoFocusY,
+      'photo_zoom': photoZoom,
       'eaten_at': eatenAt.toUtc().toIso8601String(),
     };
   }
@@ -97,6 +114,9 @@ class FoodEntry {
       isHomemade: isHomemade,
       location: location,
       photoPath: photoPath ?? this.photoPath,
+      photoFocusX: photoFocusX,
+      photoFocusY: photoFocusY,
+      photoZoom: photoZoom,
       eatenAt: eatenAt,
       createdAt: createdAt,
     );

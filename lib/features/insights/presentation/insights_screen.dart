@@ -133,7 +133,12 @@ class _OnThisDay extends ConsumerWidget {
                         child: SizedBox(
                           width: 96,
                           height: 70,
-                          child: EntryPhoto(photoPath: e.photoPath),
+                          child: EntryPhoto(
+                            photoPath: e.photoPath,
+                            focusX: e.photoFocusX,
+                            focusY: e.photoFocusY,
+                            zoom: e.photoZoom,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 14),

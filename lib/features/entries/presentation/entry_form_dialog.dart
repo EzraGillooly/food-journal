@@ -14,10 +14,12 @@ import '../application/entries_controller.dart';
 import '../data/dish.dart';
 import '../data/food_category.dart';
 import '../data/food_entry.dart';
+import '../data/entries_repository.dart';
 import '../data/photo_cropper.dart';
 import '../data/photo_picker.dart';
 import 'widgets/entry_card.dart';
 import 'widgets/entry_photo.dart';
+import 'widgets/framed_image.dart';
 
 /// Opens the add/edit entry form as a centered popup.
 Future<void> showEntryForm(BuildContext context, {FoodEntry? existing}) {
@@ -78,6 +80,11 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
   DateTime _eatenAt = DateTime.now();
   Uint8List? _photoBytes;
 
+  // How the photo is framed in the card thumbnails.
+  double _focusX = 0;
+  double _focusY = 0;
+  double _zoom = 1;
+
   bool _saving = false;
   String? _error;
 
@@ -92,6 +99,9 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
       _category = e.category;
       _homemade = e.isHomemade;
       _eatenAt = e.eatenAt.toLocal();
+      _focusX = e.photoFocusX;
+      _focusY = e.photoFocusY;
+      _zoom = e.photoZoom;
       for (final d in e.dishes) {
         _dishes.add(
           _DishDraft(
@@ -136,7 +146,15 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
     final file = await ref.read(photoPickerProvider).pick(source);
     if (file == null || !mounted) return;
     final bytes = await cropPhotoToCard(context, file.path);
-    if (bytes != null && mounted) setState(() => _photoBytes = bytes);
+    if (bytes != null && mounted) {
+      // A fresh image starts centered/unzoomed - old framing wouldn't fit it.
+      setState(() {
+        _photoBytes = bytes;
+        _focusX = 0;
+        _focusY = 0;
+        _zoom = 1;
+      });
+    }
   }
 
   Future<void> _pickDateTime() async {
@@ -213,6 +231,9 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
             isHomemade: _homemade,
             location: _location.text,
             photoPath: existing.photoPath,
+            photoFocusX: _focusX,
+            photoFocusY: _focusY,
+            photoZoom: _zoom,
             eatenAt: _eatenAt,
             createdAt: existing.createdAt,
           ),
@@ -225,6 +246,9 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
             category: _category,
             isHomemade: _homemade,
             location: _location.text,
+            photoFocusX: _focusX,
+            photoFocusY: _focusY,
+            photoZoom: _zoom,
             eatenAt: _eatenAt,
           ),
           photoBytes: _photoBytes,
@@ -320,6 +344,9 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
           eatenAt: _eatenAt,
           photoBytes: _photoBytes,
           existingPhotoPath: widget.existing?.photoPath,
+          focusX: _focusX,
+          focusY: _focusY,
+          zoom: _zoom,
         ),
         const SizedBox(height: 16),
         _PhotoField(
@@ -327,6 +354,23 @@ class _EntryFormState extends ConsumerState<_EntryForm> {
           existingPhotoPath: widget.existing?.photoPath,
           onPick: _pickPhoto,
         ),
+        if (_photoBytes != null || widget.existing?.photoPath != null) ...[
+          const SizedBox(height: 16),
+          _label(theme, 'Card framing'),
+          const SizedBox(height: 8),
+          _FramingField(
+            bytes: _photoBytes,
+            existingPhotoPath: widget.existing?.photoPath,
+            focusX: _focusX,
+            focusY: _focusY,
+            zoom: _zoom,
+            onChanged: (fx, fy, z) => setState(() {
+              _focusX = fx;
+              _focusY = fy;
+              _zoom = z;
+            }),
+          ),
+        ],
         const SizedBox(height: 16),
         _label(theme, 'Category'),
         const SizedBox(height: 8),
@@ -598,7 +642,7 @@ class _DishChip extends StatelessWidget {
   }
 }
 
-class _Preview extends StatelessWidget {
+class _Preview extends ConsumerWidget {
   const _Preview({
     required this.dishes,
     required this.category,
@@ -606,6 +650,9 @@ class _Preview extends StatelessWidget {
     required this.eatenAt,
     required this.photoBytes,
     required this.existingPhotoPath,
+    required this.focusX,
+    required this.focusY,
+    required this.zoom,
   });
 
   final List<_DishDraft> dishes;
@@ -614,9 +661,13 @@ class _Preview extends StatelessWidget {
   final DateTime eatenAt;
   final Uint8List? photoBytes;
   final String? existingPhotoPath;
+  final double focusX;
+  final double focusY;
+  final double zoom;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(themeControllerProvider);
     return ListenableBuilder(
       listenable: Listenable.merge([for (final d in dishes) d.name]),
       builder: (context, _) {
@@ -633,18 +684,150 @@ class _Preview extends StatelessWidget {
           dishes: dishList,
           category: category,
           isHomemade: isHomemade,
+          // With a freshly picked image the card renders from the override
+          // below; otherwise it loads the existing photo with this framing.
           photoPath: photoBytes == null ? existingPhotoPath : null,
+          photoFocusX: focusX,
+          photoFocusY: focusY,
+          photoZoom: zoom,
           eatenAt: eatenAt,
         );
         return IgnorePointer(
           child: EntryCard(
             entry: entry,
             photoOverride: photoBytes != null
-                ? Image.memory(photoBytes!, fit: BoxFit.cover)
+                ? FramedImage(
+                    provider: MemoryImage(photoBytes!),
+                    focusX: focusX,
+                    focusY: focusY,
+                    zoom: zoom,
+                    background: theme.tagBg,
+                  )
                 : null,
           ),
         );
       },
+    );
+  }
+}
+
+/// Interactive framing control: drag the photo to reposition and use the slider
+/// to zoom. Reports changes back so the card preview updates live.
+class _FramingField extends ConsumerWidget {
+  const _FramingField({
+    required this.bytes,
+    required this.existingPhotoPath,
+    required this.focusX,
+    required this.focusY,
+    required this.zoom,
+    required this.onChanged,
+  });
+
+  final Uint8List? bytes;
+  final String? existingPhotoPath;
+  final double focusX;
+  final double focusY;
+  final double zoom;
+  final void Function(double focusX, double focusY, double zoom) onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = ref.watch(themeControllerProvider);
+
+    ImageProvider? provider;
+    if (bytes != null) {
+      provider = MemoryImage(bytes!);
+    } else if (existingPhotoPath != null) {
+      provider = ref
+          .watch(photoUrlProvider(existingPhotoPath!))
+          .whenOrNull(data: (url) => NetworkImage(url));
+    }
+
+    if (provider == null) {
+      return Container(
+        height: 150,
+        decoration: BoxDecoration(
+          color: theme.tagBg,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        alignment: Alignment.center,
+        child: const SizedBox(
+          height: 20,
+          width: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: AspectRatio(
+            aspectRatio: 3 / 2,
+            child: LayoutBuilder(
+              builder: (context, c) {
+                return GestureDetector(
+                  onPanUpdate: (d) {
+                    final nx = (focusX - d.delta.dx * 2 / c.maxWidth).clamp(
+                      -1.0,
+                      1.0,
+                    );
+                    final ny = (focusY - d.delta.dy * 2 / c.maxHeight).clamp(
+                      -1.0,
+                      1.0,
+                    );
+                    onChanged(nx, ny, zoom);
+                  },
+                  child: FramedImage(
+                    provider: provider!,
+                    focusX: focusX,
+                    focusY: focusY,
+                    zoom: zoom,
+                    background: theme.tagBg,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(Icons.zoom_out, size: 18, color: theme.inkMuted),
+            Expanded(
+              child: Slider(
+                value: zoom.clamp(0.5, 3),
+                min: 0.5,
+                max: 3,
+                onChanged: (v) => onChanged(focusX, focusY, v),
+              ),
+            ),
+            Icon(Icons.zoom_in, size: 18, color: theme.inkMuted),
+          ],
+        ),
+        Row(
+          children: [
+            Icon(Icons.open_with, size: 13, color: theme.inkMuted),
+            const SizedBox(width: 6),
+            Text(
+              'Drag the photo to reposition',
+              style: TextStyle(
+                fontFamily: theme.bodyFont,
+                fontSize: 12,
+                color: theme.inkMuted,
+              ),
+            ),
+            const Spacer(),
+            if (focusX != 0 || focusY != 0 || zoom != 1)
+              TextButton(
+                onPressed: () => onChanged(0, 0, 1),
+                child: const Text('Reset'),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
