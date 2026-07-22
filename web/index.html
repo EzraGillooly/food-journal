@@ -23,7 +23,12 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <!-- iOS still reads the apple-prefixed flag; without it "Add to Home Screen"
+       can open in a browser view instead of as a standalone app. -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <!-- "default" keeps the status bar light with dark text, matching the cream
+       theme (black looked like a dark bar pinned above the app). -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Food Journal">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
